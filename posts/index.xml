@@ -12,7 +12,7 @@
     
     
     <item>
-      <title>[DEPESZ.COM] What is the point of bouncing?【译】</title>
+      <title>【翻译】What is the point of bouncing?</title>
       <link>https://guobo507.github.io/2020/the-point-of-pgbouncer/</link>
       <pubDate>Mon, 20 Jan 2020 09:50:07 +0800</pubDate>
       
@@ -37,7 +37,7 @@ PgBouncer是一个连接池。它与数据库（当然是PostgreSQL）保持着�
     </item>
     
     <item>
-      <title>PG中调整checkpoint相关参数的基本原则【译】</title>
+      <title>【翻译】PG中调整checkpoint相关参数的基本原则</title>
       <link>https://guobo507.github.io/2020/basic-tuning-of-checkpoint/</link>
       <pubDate>Sun, 12 Jan 2020 16:24:41 +0800</pubDate>
       

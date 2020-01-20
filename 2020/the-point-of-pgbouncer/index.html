@@ -22,10 +22,10 @@
   <title>
        
        
-           [DEPESZ.COM] What is the point of bouncing?【译】 | TheRealGuobo
+           【翻译】What is the point of bouncing? | TheRealGuobo
        
   </title>
-  <meta name="title" content="[DEPESZ.COM] What is the point of bouncing?【译】 | TheRealGuobo">
+  <meta name="title" content="【翻译】What is the point of bouncing? | TheRealGuobo">
     
   
   <link rel="stylesheet" href="/font/iconfont.css">
@@ -44,8 +44,8 @@
          "@id": "https:\/\/guobo507.github.io\/"
     },
     "articleSection" : "posts",
-    "name" : "[DEPESZ.COM] What is the point of bouncing?【译】",
-    "headline" : "[DEPESZ.COM] What is the point of bouncing?【译】",
+    "name" : "【翻译】What is the point of bouncing?",
+    "headline" : "【翻译】What is the point of bouncing?",
     "description" : "原文链接：https:\/\/www.depesz.com\/2012\/12\/02\/what-is-the-point-of-bouncing\/，译者（guobo507）水平有限，不足之处，也就这样了，哈哈。文中所有命令的输出，全部照搬原文，等有时间了我会自己验证的，各位看官请轻喷。\n 让我们开始吧！\n\x26ldquo;What is the point of bouncing?\x26rdquo;\n有些人可能熟悉PgBouncer项目，有些人可能并不熟悉。有些人知道使用它的方式\/方法\/原因，另一些人则可能不知道。\n我将在此博客文章中阐述PgBouncer的工作原理，为什么要这么做，以及使用它的理由。\n首先，让我们从一些常规描述开始：\nPgBouncer是一个连接池。它与数据库（当然是PostgreSQL）保持着许多连接，当客户端（应用程序）连接到数据库时，将从它获得一个与数据库服务器的现成的连接。\n连接就会存在或多或少的缓存。\n当然，你们可能要问：这有什么意义呢？是与数据库服务器建立连接的速度太慢，您需要对优化建立连接的速度吗？让我们来看看吧。\n我们必须考虑优化至少两个层面的东西：\n 网络流量 启动新的PostgreSQL后端进程和连接认证的开销  让我们从第一个“网络流量”开始讨论。\n显然，在执行查询操作时，PgBouncer对网络的使用并没什么可以优化，因为它不会缓存数据\/查询结果。因此，它实际上会使查询速度变慢一些。因为您没有将查询直接发送到数据库服务器，而是将其发送给了PgBouncer，后者又会将其转发给数据库服务器。\n幸运的是，到目前为止，在我所见过的所有情况下，PgBouncer的查询开销都可以忽略不计。\n但是建立连接的开销呢？\n我使用两种不同的身份验证方案进行了测试：trust和md5。在这两个连接认证方案中，我都运行了psql，且没有任何其他命令，仅仅只是“psql -h localhost -U…”发起连接。在psql启动之前，我已经在系统中运行了tcpdump，从中我可以看到：在收到psql登录成功的提示符后，该psql连接立即就被杀死了。\n下面是trust认证方式下的测试结果：\n14:41:27.603668 IP 127.0.0.1.50126 \x26gt; 127.0.0.1.5920: Flags [S], seq 716127354, win 32792, options [mss 16396,sackOK,TS val 2052107 ecr 0,nop,wscale 7], length 0 14:41:27.603682 IP 127.0.0.1.5920 \x26gt; 127.0.0.1.50126: Flags [S.], seq 212587636, ack 716127355, win 32768, options [mss 16396,sackOK,TS val 2052107 ecr 2052107,nop,wscale 7], length 0 14:41:27.",
     "inLanguage" : "en-us",
     "author" : "肉啃肉er",
@@ -108,7 +108,7 @@
       		
 <article class="post-warp" itemscope itemtype="http://schema.org/Article">
     <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">[DEPESZ.COM] What is the point of bouncing?【译】</h1>
+        <h1 class="post-title" itemprop="name headline">【翻译】What is the point of bouncing?</h1>
         <div class="post-meta">
                 Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉er</a> with ♥ 
                 <span class="post-time">
@@ -435,7 +435,7 @@ S    | depesz    | some_db   | sv_active | 127.0.0.1      |  6666 | 127.0.0.1   
 
     <div class="post-nav">
         
-        <a href="https://guobo507.github.io/2020/basic-tuning-of-checkpoint/" class="prev" rel="prev" title="PG中调整checkpoint相关参数的基本原则【译】"><i class="iconfont icon-left"></i>&nbsp;PG中调整checkpoint相关参数的基本原则【译】</a>
+        <a href="https://guobo507.github.io/2020/basic-tuning-of-checkpoint/" class="prev" rel="prev" title="【翻译】PG中调整checkpoint相关参数的基本原则"><i class="iconfont icon-left"></i>&nbsp;【翻译】PG中调整checkpoint相关参数的基本原则</a>
          
         
     </div>

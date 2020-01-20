@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2020/basic-tuning-of-checkpoint/" />
+  
+  <link rel="canonical" href="https://guobo507.github.io/2020/the-point-of-pgbouncer/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           [DEPESZ.COM] What is the point of bouncing?【译】 | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="[DEPESZ.COM] What is the point of bouncing?【译】 | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "[DEPESZ.COM] What is the point of bouncing?【译】",
+    "headline" : "[DEPESZ.COM] What is the point of bouncing?【译】",
+    "description" : "原文链接：https:\/\/www.depesz.com\/2012\/12\/02\/what-is-the-point-of-bouncing\/，译者（guobo507）水平有限，不足之处，也就这样了，哈哈。文中所有命令的输出，全部照搬原文，等有时间了我会自己验证的，各位看官请轻喷。\n 让我们开始吧！\n\x26ldquo;What is the point of bouncing?\x26rdquo;\n有些人可能熟悉PgBouncer项目，有些人可能并不熟悉。有些人知道使用它的方式\/方法\/原因，另一些人则可能不知道。\n我将在此博客文章中阐述PgBouncer的工作原理，为什么要这么做，以及使用它的理由。\n首先，让我们从一些常规描述开始：\nPgBouncer是一个连接池。它与数据库（当然是PostgreSQL）保持着许多连接，当客户端（应用程序）连接到数据库时，将从它获得一个与数据库服务器的现成的连接。\n连接就会存在或多或少的缓存。\n当然，你们可能要问：这有什么意义呢？是与数据库服务器建立连接的速度太慢，您需要对优化建立连接的速度吗？让我们来看看吧。\n我们必须考虑优化至少两个层面的东西：\n 网络流量 启动新的PostgreSQL后端进程和连接认证的开销  让我们从第一个“网络流量”开始讨论。\n显然，在执行查询操作时，PgBouncer对网络的使用并没什么可以优化，因为它不会缓存数据\/查询结果。因此，它实际上会使查询速度变慢一些。因为您没有将查询直接发送到数据库服务器，而是将其发送给了PgBouncer，后者又会将其转发给数据库服务器。\n幸运的是，到目前为止，在我所见过的所有情况下，PgBouncer的查询开销都可以忽略不计。\n但是建立连接的开销呢？\n我使用两种不同的身份验证方案进行了测试：trust和md5。在这两个连接认证方案中，我都运行了psql，且没有任何其他命令，仅仅只是“psql -h localhost -U…”发起连接。在psql启动之前，我已经在系统中运行了tcpdump，从中我可以看到：在收到psql登录成功的提示符后，该psql连接立即就被杀死了。\n下面是trust认证方式下的测试结果：\n14:41:27.603668 IP 127.0.0.1.50126 \x26gt; 127.0.0.1.5920: Flags [S], seq 716127354, win 32792, options [mss 16396,sackOK,TS val 2052107 ecr 0,nop,wscale 7], length 0 14:41:27.603682 IP 127.0.0.1.5920 \x26gt; 127.0.0.1.50126: Flags [S.], seq 212587636, ack 716127355, win 32768, options [mss 16396,sackOK,TS val 2052107 ecr 2052107,nop,wscale 7], length 0 14:41:27.",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉",
+    "creator" : "肉啃肉",
+    "publisher": "肉啃肉",
+    "accountablePerson" : "肉啃肉",
+    "copyrightHolder" : "肉啃肉",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-20 09:50:07 \x2b0800 CST",
+    "dateModified" : "2020-01-20 09:50:07 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/the-point-of-pgbouncer\/",
+    "wordCount" : "1077",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">[DEPESZ.COM] What is the point of bouncing?【译】</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-20 itemprop="datePublished">January 20, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <blockquote>
+<p>原文链接：<a href="https://www.depesz.com/2012/12/02/what-is-the-point-of-bouncing/">https://www.depesz.com/2012/12/02/what-is-the-point-of-bouncing/</a>，译者（<a href="https://github.com/guobo507">guobo507</a>）水平有限，不足之处，也就这样了，哈哈。文中所有命令的输出，全部照搬原文，等有时间了我会自己验证的，各位看官请轻喷。</p>
+</blockquote>
+<p>让我们开始吧！</p>
+<p>&ldquo;What is the point of bouncing?&rdquo;</p>
+<p>有些人可能熟悉<a href="http://www.pgbouncer.org/">PgBouncer</a>项目，有些人可能并不熟悉。有些人知道使用它的方式/方法/原因，另一些人则可能不知道。</p>
+<p>我将在此博客文章中阐述PgBouncer的工作原理，为什么要这么做，以及使用它的理由。</p>
+<p>首先，让我们从一些常规描述开始：</p>
+<p>PgBouncer是一个连接池。它与数据库（当然是PostgreSQL）保持着许多连接，当客户端（应用程序）连接到数据库时，将从它获得一个与数据库服务器的现成的连接。</p>
+<p>连接就会存在或多或少的缓存。</p>
+<p>当然，你们可能要问：这有什么意义呢？是与数据库服务器建立连接的速度太慢，您需要对优化建立连接的速度吗？让我们来看看吧。</p>
+<p>我们必须考虑优化至少两个层面的东西：</p>
+<ul>
+<li>网络流量</li>
+<li>启动新的PostgreSQL后端进程和连接认证的开销</li>
+</ul>
+<p>让我们从第一个“网络流量”开始讨论。</p>
+<p>显然，在执行查询操作时，PgBouncer对网络的使用并没什么可以优化，因为它不会缓存数据/查询结果。因此，它实际上会使查询速度变慢一些。因为您没有将查询直接发送到数据库服务器，而是将其发送给了PgBouncer，后者又会将其转发给数据库服务器。</p>
+<p>幸运的是，到目前为止，在我所见过的所有情况下，PgBouncer的查询开销都可以忽略不计。</p>
+<p>但是建立连接的开销呢？</p>
+<p>我使用两种不同的身份验证方案进行了测试：<code>trust</code>和<code>md5</code>。在这两个连接认证方案中，我都运行了<code>psql</code>，且没有任何其他命令，仅仅只是“<code>psql -h localhost -U…</code>”发起连接。在<code>psql</code>启动之前，我已经在系统中运行了tcpdump，从中我可以看到：在收到<code>psql</code>登录成功的提示符后，该<code>psql</code>连接立即就被杀死了。</p>
+<p>下面是<code>trust</code>认证方式下的测试结果：</p>
+<pre><code>14:41:27.603668 IP 127.0.0.1.50126 &gt; 127.0.0.1.5920: Flags [S], seq 716127354, win 32792, options [mss 16396,sackOK,TS val 2052107 ecr 0,nop,wscale 7], length 0
+14:41:27.603682 IP 127.0.0.1.5920 &gt; 127.0.0.1.50126: Flags [S.], seq 212587636, ack 716127355, win 32768, options [mss 16396,sackOK,TS val 2052107 ecr 2052107,nop,wscale 7], length 0
+14:41:27.603693 IP 127.0.0.1.50126 &gt; 127.0.0.1.5920: Flags [.], ack 1, win 257, options [nop,nop,TS val 2052107 ecr 2052107], length 0
+14:41:27.603797 IP 127.0.0.1.50126 &gt; 127.0.0.1.5920: Flags [P.], seq 1:81, ack 1, win 257, options [nop,nop,TS val 2052107 ecr 2052107], length 80
+14:41:27.603805 IP 127.0.0.1.5920 &gt; 127.0.0.1.50126: Flags [.], ack 81, win 256, options [nop,nop,TS val 2052107 ecr 2052107], length 0
+14:41:27.606109 IP 127.0.0.1.5920 &gt; 127.0.0.1.50126: Flags [P.], seq 1:327, ack 81, win 256, options [nop,nop,TS val 2052108 ecr 2052107], length 326
+14:41:27.606195 IP 127.0.0.1.50126 &gt; 127.0.0.1.5920: Flags [.], ack 327, win 256, options [nop,nop,TS val 2052108 ecr 2052108], length 0
+</code></pre>
+<p>下面是<code>md5</code>认证方式下的测试结果：</p>
+<pre><code>14:42:24.502813 IP 127.0.0.1.50143 &gt; 127.0.0.1.5920: Flags [S], seq 1860178418, win 32792, options [mss 16396,sackOK,TS val 2066332 ecr 0,nop,wscale 7], length 0
+14:42:24.502825 IP 127.0.0.1.5920 &gt; 127.0.0.1.50143: Flags [S.], seq 2534748821, ack 1860178419, win 32768, options [mss 16396,sackOK,TS val 2066332 ecr 2066332,nop,wscale 7], length 0
+14:42:24.502834 IP 127.0.0.1.50143 &gt; 127.0.0.1.5920: Flags [.], ack 1, win 257, options [nop,nop,TS val 2066332 ecr 2066332], length 0
+14:42:24.502944 IP 127.0.0.1.50143 &gt; 127.0.0.1.5920: Flags [P.], seq 1:81, ack 1, win 257, options [nop,nop,TS val 2066332 ecr 2066332], length 80
+14:42:24.502950 IP 127.0.0.1.5920 &gt; 127.0.0.1.50143: Flags [.], ack 81, win 256, options [nop,nop,TS val 2066332 ecr 2066332], length 0
+14:42:24.504242 IP 127.0.0.1.5920 &gt; 127.0.0.1.50143: Flags [P.], seq 1:14, ack 81, win 256, options [nop,nop,TS val 2066332 ecr 2066332], length 13
+14:42:24.504296 IP 127.0.0.1.50143 &gt; 127.0.0.1.5920: Flags [.], ack 14, win 257, options [nop,nop,TS val 2066332 ecr 2066332], length 0
+14:42:24.504395 IP 127.0.0.1.50143 &gt; 127.0.0.1.5920: Flags [P.], seq 81:122, ack 14, win 257, options [nop,nop,TS val 2066332 ecr 2066332], length 41
+14:42:24.505548 IP 127.0.0.1.5920 &gt; 127.0.0.1.50143: Flags [P.], seq 14:340, ack 122, win 256, options [nop,nop,TS val 2066332 ecr 2066332], length 326
+14:42:24.541972 IP 127.0.0.1.50143 &gt; 127.0.0.1.5920: Flags [.], ack 340, win 256, options [nop,nop,TS val 2066342 ecr 2066332], length 0
+</code></pre>
+<p>这里，我们没有基于“send packet, reply”来讨论，我们讨论的是应用程序（在我的示例中为psql）和服务器（PostgreSQL）之间的5次（trust）和7次（md5）单向通信（one-way trips）过程。</p>
+<p>因此，我在示例测试环境中进行了测试，可以通过测试ping本地主机（localhost），平均往返时间为0.018ms。然后ping连接到连接到同一交换机的服务器（1000Mb/s速率，全双工模式），结果是0.213ms。</p>
+<p>这意味着使用“trust”连接到<code>localhost</code>的平均时间为0.045毫秒，使用md5时连接到localhost的时间为0.063毫秒；同理，连接同一网络上的服务器主机的连接的时间分为0.532毫秒（trust）和0.745毫秒（md5）。</p>
+<p>这样的连接时间听起来可能并不多。但是实际情况是，当我们使用主键从相对较宽的表（例如750Bytes）中获取单行数据时，仅仅花费了0.03ms，我们突然发现连接的开销是从磁盘中获取数据的20倍之多。</p>
+<p>因此，在相对正常的情况下，当您有N台连接到PostgreSQL数据库的应用程序服务器时，可以通过配置本地（对于应用程序服务器）PgBouncer服务器，从而将连接时间减少约0.7ms。</p>
+<p>看起来不错，不是吗？</p>
+<p>但是还有另一个好处，PgBouncer会缓存到数据库服务器的连接。如果您的应用程序停止使用其与服务器的连接（例如，通过与PgBouncer断开连接），PgBouncer和PostgreSQL之间的连实际上并没有关闭，而是被PgBouncer保留在连接池中，以重新用于应用程序的下一个连接。</p>
+<p>这意味着在大多数的情况下（实际上是最常见的情况），我们也同时节省了连接PostgreSQl数据库服务器时，启动新的后端进程的开销。因为就PostgreSQL而言，一个后端进程仅保持与单个客户端（PgBouncer）的连接。</p>
+<p>那么，这笔开销究竟有多大？</p>
+<p>为了计算它，我将编写简单的Perl脚本，该脚本使用unix套接字循环的连接到数据库（以限制所有可能的开销）。让我们看看进展如何：</p>
+<pre><code>#!/usr/bin/env perl
+use strict;
+use warnings;
+use DBI;
+use Time::HiRes qw( time );
+use List::Util qw( min max sum );
+
+print get_dbh()-&gt;selectall_arrayref('SELECT version()')-&gt;[0]-&gt;[0], &quot;\n&quot;;
+my @times = ();
+for (1..10) {
+    my $start_time = time();
+    my $dbh = get_dbh();
+    my $end_time = time();
+    push @times, $end_time - $start_time;
+}
+
+printf &quot;min/avg/max: %.6f/%.6f/%.6f (ms)\n&quot;, min(@times)*1000, sum(@times)*100, max(@times)*1000;
+
+exit;
+
+sub get_dbh {
+    return DBI-&gt;connect(&quot;dbi:Pg:dbname=depesz&quot;) or die &quot;Oops\n&quot;;
+}
+</code></pre>
+<p>运行这个脚本，结果为：</p>
+<pre><code>PostgreSQL 9.1.6 on x86_64-unknown-linux-gnu, compiled by gcc (GCC) 4.1.2 20080704 (Red Hat 4.1.2-44), 64-bit
+min/avg/max: 2.194166/2.564168/2.914906 (ms)
+</code></pre>
+<blockquote>
+<p>说明：在之前我写的脚本测试结果中，它仅仅花费了百万分之一毫秒。但是esh发现了我的算术错误。显然我之前做错了，上面的脚本及结果已经修正了。显然，开始新连接的时间并非无关紧要，它实际上是相当高的（我的测试是在几乎没有流量的服务器上进行的，因此在正常工作负载下，建立连接的时间可能会更长）。</p>
+</blockquote>
+<p>从上面我写的所有内容可以看到，使用了PgBouncer之后，我们可以以更少的时间（通常比直接连接PostgreSQL需要花费约0.7ms的时间少的多）获得与数据库的新的连接。</p>
+<p>但有的人可能会说：很好，但是我可以使用持久连接，这样我就几乎不需要创建新的连接了。</p>
+<p>是的，如果您有这种需求，则不需要再通过PgBouncer来缩短创建连接的时间。</p>
+<p>但这通常也会导致一些非常有趣的情况，很多人可能已经经历过了。</p>
+<p>假设您的PostgreSQL实例具有500个连接，但实际上可能只有少数的几个连接可以执行某些操作。其余剩下的都处于空闲（IDLE）状态，注意不是“IDLE in transaction”。Just plain, old, boring, IDLE.</p>
+<p>为什么会这样呢？因为通常，应用程序不会一直在数据库中运行查询。即使看起来好像是在查询一样，实际上在非数据库相关的事情上也花费了大量时间，例如从客户端获取请求，生成输出，在应用程序代码中执行各种逻辑等。数据库查询虽然很重要，但并非每次都在所有应用程序服务器上同时发生。</p>
+<p>就好像下面的结果一样：</p>
+<pre><code>postgres=# SELECT CASE WHEN current_query = '&lt;IDLE&gt;' THEN 'idle' ELSE 'non-idle' END AS state, COUNT(*), SUM(clock_timestamp() - query_start) FROM pg_stat_activity GROUP BY 1;
+state   | COUNT |            SUM
+----------+-------+----------------------------
+idle     |   647 | 106 days 2298:57:58.271602
+non-idle |     5 | 00:00:05.509914
+(2 ROWS)
+</code></pre>
+<p>在这个数据库（这是在线零售商的主要生产数据库）中，我们检查发现，我总共有5个正常工作的后端进程，总的查询持续时间为5秒，还有647个空闲的后端进程，总空闲时间为106天。</p>
+<p>而且，所有这些处于IDLE状态的后端进程都在使用内存。当然，可能没有操作系统的<a href="https://www.depesz.com/2012/06/09/how-much-ram-is-postgresql-using/">ps</a>命令报告内存使用情况的那么多。就我的情况而言，在这600个后端上，如果我可以关闭所有那些空闲，无用的后端进程，则可以释放约2GB的RAM。</p>
+<p>这就是PgBouncer很棒的原因。那么，它是怎么做到的呢？</p>
+<p>通常，管理连接的流程如下：</p>
+<ul>
+<li>客户端连接到PgBouncer，从而建立客户端连接；</li>
+<li>PgBouncer从池中获得一个免费连接，或建立一个新连接，并将该服务器连接分配给该客户端连接；</li>
+<li>一旦客户端连接成功，它与PgBouncer的连接（客户端连接）就会与PgBouncer和PostgreSQL之间的相同连接（服务器连接）进行配对；</li>
+<li>当客户端断开连接时，它的客户端连接当然会关闭掉，但是PgBouncer与PostgreSQL服务器的连接会放回连接池中。</li>
+</ul>
+<p>到目前为止，你会觉得一切都很好，干净利落。</p>
+<p>但是在<code>PgBouncer.ini</code>配置文件中，您可以找到一个配置选项：“<code>pool_mode</code>”，它可以具有三个可能的值：</p>
+<ul>
+<li><code>session</code></li>
+<li><code>transaction</code></li>
+<li><code>statement</code></li>
+</ul>
+<p>会话池（<code>session</code>）是默认的设置，它的工作逻辑就像我上面刚刚描述的那样。另外两个设置的工作逻辑会更加聪明（Smarter）。</p>
+<p>事务池（<code>transaction</code>）意味着客户端连接和服务器连接之间的配对不是恒定的。当客户端启动新事务时，服务器连接就会分配给客户端连接，并不会在客户端断开连接时才释放到池中，而是在完成事务时释放（例如，执行了<code>COMMIT</code>或者<code>ROLLBACK</code>）。</p>
+<p>立刻尖叫：好极了！因此，所有那些闲置的事务都将消失。对？好吧，是的，但也不是。在开始更多细节之前，让我们先谈谈语句池（<code>statement</code>）。您可以根据事务池的描述和名称来猜测，在语句池中，服务器的连接在任何语句被执行后，就会立即被放回到连接池中，因为每条语句都会被自动提交（AUTOCOMMIT）。</p>
+<p>如果您不是经验丰富的PostgreSQL用户，您可能会说您通常不使用事务，只会在没有任何BEGIN/COMMIT的情况下执行语句，因为它们很慢。</p>
+<p>如果那是您，请不用担心；或者说，我非常抱歉。PostgreSQL中的每个查询，即使没有被显式的<code>BEGIN; COMMIT;</code>包围，它仍然是一个事务。它们是很小/很短的事务，就在语句执行期间存在。记住，事务总是存在的。</p>
+<p>所以，您可以在<code>PgBouncer.ini</code>中启用交易池，然后基本上就可以摆脱大多数空闲（IDLE）状态的后端进程了，对吗？是的，当然了。</p>
+<p>在我们正在使用的其中一台服务器上，使用事务池的设置，我们能够观察到显著的效果改善。比如从：</p>
+<ul>
+<li>每天平均500个并发连接</li>
+<li>一天中的高峰时段达到2000个连接</li>
+</ul>
+<p>到：</p>
+<ul>
+<li>日平均：40</li>
+<li>峰值：60</li>
+</ul>
+<p>注意，即使这样，我们发现仍然会有空闲连接数多于非空闲数的情况，例如：</p>
+<pre><code>$ SELECT CASE WHEN current_query = '&lt;IDLE&gt;' THEN 'idle' ELSE 'non-idle' END AS state, COUNT(*), SUM(clock_timestamp() - query_start) FROM pg_stat_activity GROUP BY 1;
+state   | COUNT |       SUM
+----------+-------+-----------------
+idle     |    20 | 00:12:23.771483
+non-idle |     6 | 00:00:00.178652
+(2 ROWS)
+</code></pre>
+<p>但这是因为PgBouncer必须在池中保存一些连接。</p>
+<p>请相信我，这是一个非常繁忙的数据库服务器。它的主要数据库是Internet上一个非常大的平台，即使到现在（在美国东海岸的波兰，下午4点，周日上午10点，星期日），该数据库每秒仍具有约3000笔交易。</p>
+<p>减少后端进程的数量的好处是双重的。当然，您可以获得更多的可用内存，内核可以将其用作磁盘缓存，并且您也减少了PostgreSQL自身内部进程间通信的开销。新版本的PostgreSQL中，进程之间的开销控制会更好，但是我已经遇到过较早的PostgreSQL的情况，其中1000个后端进程之间的IPC极大地减慢了一切。</p>
+<p>那么事务池是万金油（原文为：sliver bullet）吗？是任何情况下都可以使用的设置吗？很不幸，不行。尽管使用事务池有很多好处（我没有使用语句池，因为我看不出什么时候才是有益的），但是使用它实际上是有问题的。</p>
+<p>原因很简单：没有办法保证两个后续的事务（甚至是查询，如果您使用的是自动提交模式的话。）将在同一个后端进程上运行。</p>
+<p>意味着，如果您正在跨事务的使用非事务中的数据，则可能会看到失败或错误。稍后您会看到它们。</p>
+<p>但是谁会使用非事务的数据？答案是，几乎每个人。</p>
+<p>例如；对于初学者而言，序列；缓存的查询计划；Advisory locks。还有，如果使用的是PL/Perl的函数，则为<code>％_SHARED</code>。</p>
+<p>这是否意味着您不能使用它们其中任何一个？不，您可以使用，但是仅当您将状态保持为单个事务时使用。</p>
+<p>例如，让我们谈谈序列吧。</p>
+<p>如果您像这样使用它们：</p>
+<pre><code>$ BEGIN;
+$ INSERT INTO z (x) VALUES (1);
+$ INSERT INTO z2 (z_id) VALUES ( currval('z_id_seq') );
+$ commit;
+</code></pre>
+<p>意思是，您从刚刚更新的序列中获取当前值，并且在同一事务中完成，这样是没问题的。</p>
+<p>但是，如果您是下面这样：</p>
+<pre><code>$ BEGIN;
+$ INSERT INTO z (x) VALUES (1);
+$ commit;
+$ BEGIN;
+$ INSERT INTO z2 (z_id) VALUES ( currval('z_id_seq') );
+$ commit;
+</code></pre>
+<p>您会收到一个“data corruption”的错误，因为第二个事务不可避免地会在某个时间点运行在与第一个事务不同的后端，所以您可能会收到有关未初始化序列的错误，或者会得到错误的<code>currval()</code>值。</p>
+<p>同理，如果您使用自动提交运行两个插入，而没有使用<code>BEGIN; ... ; COMMIT;</code>块来包含语句，就会发生同样的事情。</p>
+<p>当然，对于每个问题，都会有解决方案。对于序列问题，您可以在一次事务中使用它们；或使用<code>INSERT INTO…RETURNING ID;</code>”并在您的应用程序中重复使用此ID，而无需调用<code>currval()</code>；又或者首先通过<code>select nextval(‘z_id_seq');</code>，然后在所有后续查询中使用此值。简单吧。</p>
+<p>当我们考虑prepared statements语句的情况时，它会更加复杂。</p>
+<p>不幸的是（基于几种情况，我认为）在某些数据库驱动程序中，它们已成为默认设置，例如在Perl中的<code>DBD::Pg</code>中。或PHP中的<code>PDO</code>中。</p>
+<p>如果您的应用程序正在使用prepared statements（注意，这实际上无关应用程序中的<code>prepare_statement()</code>之类的调用），您会在PostgreSQL的日志中看到类似“parse some_identifier: SELECT …&quot;，或者“bind some_identifier: …&quot;，又或者“execute some_identifier: …&ldquo;的内容。</p>
+<p>根据您使用的程序语言/驱动程序，有不同的处理方法。在Perl中，当创建新的数据库连接时，我会将<code>pg_server_prepare</code>选项设置为<code>0</code>，并每次当我认为有人尝试将此设置变为默认时，都会想骂人。</p>
+<p>在PDO中，解决方案是通过将<code>PDO::ATTR_EMULATE_PREPARES</code>设置为<code>TRUE</code>作为第4个参数传递给新<code>PDO()</code>来启用所谓的仿真准备( emulated prepares)。</p>
+<p>如果您使用了其他语言，那么我不太确定处理的方法。因为我不得不处理这两个语言的这个问题，并且已经解决了问题。</p>
+<p>如果真的要使用prepared statements，该怎么办？而且，顺便说一下，它又有什么问题呢？</p>
+<p>它的问题在于即使在事务之外，prepared statements也将留在后端进程。因此，您可能会看到类似如下的内容：</p>
+<pre><code>$ PREPARE ins(int4, int4, int4, int4, int4) AS INSERT INTO i (j) VALUES ($1),($2),($3),($4),($5);
+
+$ BEGIN;
+$ EXECUTE ins(1,2,3,4,5);
+$ commit;
+
+$ BEGIN;
+$ EXECUTE ins(6,7,8,9,10);
+$ commit;
+
+$ BEGIN;
+$ EXECUTE ins(11,12,13,14,15);
+$ commit;
+</code></pre>
+<p>而且，当您在PgBouncer中使用事务池模式进行尝试时，迟早会得到如下的错误：</p>
+<pre><code>ERROR:  prepared statement &quot;ins&quot; does NOT exist
+</code></pre>
+<p>或者：</p>
+<pre><code>ERROR:  prepared statement &quot;ins&quot; already EXISTS
+</code></pre>
+<p>因为您会尝试在给定的后端进程中准备该语句之前执行该语句（准备工作（preparation）在不同的事务中并且最终会在不同的进程中完成），或者您将尝试准备一个语句，但是由于由另一个客户端进程的已完成的工作，它可能已经在给定的后端进程中准备了。</p>
+<p>幸运的是PgBouncer具有“重置查询（RESET QUERY）”的概念，它其实是一个特殊查询，在当服务器连接返回到池时会在后端进程上执行。通常，这会清除所有修改的设置，并会删除已经准备好的语句。</p>
+<p>您也可以考虑使用<a href="https://github.com/dimitri/preprepare">pre_prepare</a>。您可以使用该工具来确保由PgBouncer启动的所有后端进程都具有一些预定义的准备好的语句集供您使用。</p>
+<p>就个人而言，我只是从应用程序中删除对prepare statements的使用。</p>
+<p>在极少数情况下，使用准备好的语句如果确实可以使您的应用程序受益。在这种情况下，请继续使用它们。但是，请仔细衡量所有优点和缺点。如果对于单个用例，也许您直接连接到PostgreSQL效果会更好。</p>
+<p>现在我们知道了PgBouncer的原理以及作用。因此，我们来讨论一下它的最佳配置选项是什么，以及如何进行监控。</p>
+<p>当然，第一个问题是：我应该部署一个集中的PgBouncer，还是为每个应用程序服务器都配置自己的PgBouncer服务？答案是：为什么不两者兼而有之？</p>
+<p>请认真的考虑以下几种情况：</p>
+<ul>
+<li>应用程序使用持久化的连接来连接到本地PgBouncer；</li>
+<li>应用服务器上的PgBouncer，连接到集中式PgBouncer；</li>
+<li>集中式PgBouncer连接到数据库</li>
+</ul>
+<p>这样做的好处是：</p>
+<ul>
+<li>由于持久化的连接，我们将启动新连接的开销设置为最小；</li>
+<li>具有本地PgBouncer意味着通常应用程序不必等待获取数据库连接；</li>
+<li>所有应用服务器中的PgBouncer通过集中的、“idle-removing”的PgBouncer来连接。</li>
+</ul>
+<p>让我们考虑一下，在我们的例子中，我们有10个Web服务器，每个服务器运行30个生成网页的进程。每一个进程都可能需要数据库服务器。总共可能需要300个连接。</p>
+<p>首先，限制每个Web服务器上的PgBouncer将传出的连接数量，从30个限制为4-5个。但这意味着数据库最终可能将受到40-50个连接（每个Web服务器的4-5个连接）的攻击。So the centralized pgBouncer removes some more idles by “juggling&rdquo; server connections between connections coming from different webservers.（这一句没想好怎么翻译比较合适。）</p>
+<p>由于有了这样的设置，我们很可能只需要在集中的PgBouncer服务器上运行10-15个到PostgreSQL的连接即可。</p>
+<p>当您将PgBouncer安装好以后，迟早您会遇到一个问题：我已经与数据库建立了连接，但是我需要找到它的来源，因为它正在做错误的事情。</p>
+<p>但是当你像我上面描述的情形一样，部署了集中式的PgBouncer时，很显然最终所有的连接都来自于它。那么如何找到某一个连接实际上是从哪里发起的呢？幸运的是，找到它并不是那么复杂，只是有点乏味。但是，在Linux上请不要使用UNIX套接字发起连接，请始终使用TCP来连接。</p>
+<p>显然，在Linux上，我们无法确定给定UNIX套接字连接的发起者。</p>
+<p>我在<a href="https://serverfault.com/questions/252723/how-to-find-other-end-of-unix-socket-connection">ServerFault</a>上咨询了这个问题，在Linux上唯一可行的解​​决方案可能会涉及到自定义的内核构建，并在/proc/kcore（基本上是系统的整个内存）上运行gdb（调试器）。对一般用户而言或许并不友好。</p>
+<p>由于这个问题，我通常不使用UNIX套接字，而对它保持怀疑的态度。</p>
+<p>无论如何，让我们考虑以下的示例。我有这个连接：</p>
+<pre><code>$ SELECT * FROM pg_stat_activity WHERE procpid = 5225;
+-[ RECORD 1 ]----+------------------------------
+datid            | 16416
+datname          | some_db
+procpid          | 5225
+usesysid         | 136689798
+usename          | depesz
+application_name |
+client_addr      | 127.0.0.1
+client_hostname  |
+client_port      | 36740
+backend_start    | 2012-12-02 16:03:17.214369+00
+xact_start       | 2012-12-02 16:03:25.775003+00
+query_start      | 2012-12-02 16:03:25.775003+00
+waiting          | f
+current_query    | SELECT pg_sleep(123124);
+</code></pre>
+<p>如您所见，它正在运行很长时间的<code>pg_sleep()</code>，我想找到是什么应用程序/用户启动了它。我发现连接是来自127.0.0.1，从端口号（client_port）可以看出这一点：</p>
+<pre><code>=$ sudo netstat -ntp | grep 36740
+tcp        0      0 127.0.0.1:36740             127.0.0.1:5432              ESTABLISHED 23028/pgbouncer
+tcp        0      0 127.0.0.1:5432              127.0.0.1:36740             ESTABLISHED 5225/postgres: depe
+</code></pre>
+<p>所以，我们发现连接来自PgBouncer。现在，我需要连接到Pgbouncer指定的数据库。这是通过下面的命令连接到Pgbouncer的端口并指定使用pgbouncer数据库来完成的：</p>
+<pre><code>$ psql -U postgres -h localhost -p 6543 -d pgbouncer
+</code></pre>
+<p>在pgbouncer数据库中，我可以运行<code>SHOW SOCKETS</code>命令。完整的输出很长，所以让我们看一下代表我的连接的行：</p>
+<pre><code>TYPE |   USER    | DATABASE  |   state   |      addr      | port  |  local_addr  | local_port |    connect_time     |    request_time     |      ptr       |      link      | recv_pos | pkt_pos | pkt_remain | send_pos | send_remain | pkt_avail | send_avail·
+------+-----------+-----------+-----------+----------------+-------+--------------+------------+---------------------+---------------------+----------------+----------------+----------+---------+------------+----------+-------------+-----------+------------
+S    | depesz    | some_db   | sv_active | 127.0.0.1      |  6666 | 127.0.0.1    |      36740 | 2012-12-02 16:03:17 | 2012-12-02 16:03:17 | 0x5012530      | 0x2ab9b676e1a0 |        0 |       0 |          0 |        0 |           0 |         0 |          0
+</code></pre>
+<p>第一列显示了它是服务器连接。然后，有许多列现在对您来说或多或少，或无关紧要。但是请记住“ptr”和“link”列很重要。</p>
+<p>多亏了它，我可以找到客户端连接：</p>
+<pre><code>TYPE |   USER    | DATABASE  |   state   |      addr      | port  |  local_addr  | local_port |    connect_time     |    request_time     |      ptr       |      link      | recv_pos | pkt_pos | pkt_remain | send_pos | send_remain | pkt_avail | send_avail·
+------+-----------+-----------+-----------+----------------+-------+--------------+------------+---------------------+---------------------+----------------+----------------+----------+---------+------------+----------+-------------+-----------+------------
+C    | depesz    | some_db   | cl_active | 192.168.1.19   | 34368 | 192.168.1.10 |       6543 | 2012-12-02 16:03:17 | 2012-12-02 16:03:25 | 0x2ab9b676e1a0 | 0x5012530      |        0 |       0 |          0 |        0 |           0 |         0 |          0
+S    | depesz    | some_db   | sv_active | 127.0.0.1      |  6666 | 127.0.0.1    |      36740 | 2012-12-02 16:03:17 | 2012-12-02 16:03:17 | 0x5012530      | 0x2ab9b676e1a0 |        0 |       0 |          0 |        0 |           0 |         0 |          0
+</code></pre>
+<p>请注意，C的连接的“ptr”列与S连接的“link”相同，并且C连接的“link”与S连接的“ptr”相同。</p>
+<p>在C连接（客户端连接）一行中，我看到客户端从IP地址为192.168.1.19的计算机连接，在此计算机上，它使用的是TCP端口34368。通过这些信息，我就可以SSH到该远程计算机，并结合netstat命令来检查它到底是什么。</p>
+<p>不幸的是PgBouncer不允许您过滤数据，<code>SHOW SOCKETS</code>（和其他SHOW命令一样）只是将数据转储到您的应用程序，您必须自己解析/过滤想要的数据。这是可行的，尽管还可以改进。</p>
+<p>最后一件事。我的一些读者可能会问：pgPool呢？毕竟，毕竟它的名字带有“pool”，它是“pooling”解决方案吧？</p>
+<p>好吧！首先，我对pgPool的经验很少。至少在几年前，我测试了一下，然后我发现：</p>
+<ul>
+<li>pgPool为每个客户端连接创建了新进程（PgBouncer使用单个进程和async-IO）；</li>
+<li>它仅在会话池模式下有效，我不喜欢它。与会话池相比，我更喜欢持久连接。</li>
+</ul>
+<p>基于这些事实，我认为使用pgPool作为连接池解决方案对我来说是不合理的。但是，那是在几年前，或许现在它可能已经改变了。另一方面，pgPool似乎走了不同的路线。例如，基于语句级别的复制、自动负载平衡以及故障转移，因此这并不是一个真正公平（apples-to-apples）的比较。</p>
+<p>我希望以上帖子对大家有帮助，如果有任何不清楚的地方。首先，很感谢您的评论；然后，我会尝试回答您的问题。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉 </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/the-point-of-pgbouncer/>https://guobo507.github.io/2020/the-point-of-pgbouncer/</span>
+            </p>
+            
+             
+            <p class="copyright-item lincese">
+                本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2020/basic-tuning-of-checkpoint/" class="prev" rel="prev" title="PG中调整checkpoint相关参数的基本原则【译】"><i class="iconfont icon-left"></i>&nbsp;PG中调整checkpoint相关参数的基本原则【译】</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

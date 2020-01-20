@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2020/install-percona-toolkit/" />
+  <link rel="next" href="https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/" />
+  <link rel="canonical" href="https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           使用pgxc_ctl工具来初始化一个Postgre-XC集群 | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="使用pgxc_ctl工具来初始化一个Postgre-XC集群 | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "使用pgxc_ctl工具来初始化一个Postgre-XC集群",
+    "headline" : "使用pgxc_ctl工具来初始化一个Postgre-XC集群",
+    "description" : "环境说明 测试环境，一共4个节点，两个用作gtm，另外两个用作gtm_proxy\/coordinator和datanode。\n具体安装不说，参考相关文档即可。\n环境规划如下所示：\n目录规划：\n   主机名 目录     pgxc-lvs -   pgxc-gtm1 \/data\/gtm   pgxc-gtm2 \/data\/gtm   pgxc-n1 \/data\/coord, \/data\/data, \/data\/coord_s, \/data\/data_s, \/data\/gtm_proxy   pgxc-n2 \/data\/coord, \/data\/data, \/data\/coord_s, \/data\/data_s, \/data\/gtm_proxy    端口规划：\n   主机名\/ROLE 端口     pgxc-lvs 5432(DB)   pgxc-gtm1 6666   pgxc-gtm2 6666   gtm_proxy1 6667   gtm_proxy2 6667   coord1\/coord1_pooler Port 6611\/6612   coord2\/coord2_pooler Port 6611\/6612   coord1_slave\/coord1_slave_pooler Port 6621\/6622   coord2_slave\/coord2_slave_pooler Port 6621\/6622   data1\/data1_pooler Port 6631\/6632   data2\/data2_pooler Port 6631\/6632   data1_slave\/data1_slave_pooler Port 6641\/6642   data1_slave\/data1_slave_pooler Port 6641\/6642    软件版本 我是用的是Postgres-XL提供的版本，所有节点都安装相同版本的软件包，如下所示为其中一个节点：",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉",
+    "creator" : "肉啃肉",
+    "publisher": "肉啃肉",
+    "accountablePerson" : "肉啃肉",
+    "copyrightHolder" : "肉啃肉",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-03 14:08:58 \x2b0800 CST",
+    "dateModified" : "2020-01-03 14:08:58 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/init-pgxc-using-pgxc_ctl\/",
+    "wordCount" : "774",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">使用pgxc_ctl工具来初始化一个Postgre-XC集群</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-03 itemprop="datePublished">January 3, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h1 id="heading">环境说明</h1>
+<p>测试环境，一共4个节点，两个用作gtm，另外两个用作gtm_proxy/coordinator和datanode。</p>
+<p>具体安装不说，参考相关文档即可。</p>
+<p>环境规划如下所示：</p>
+<p><strong>目录规划：</strong></p>
+<table>
+<thead>
+<tr>
+<th>主机名</th>
+<th>目录</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pgxc-lvs</td>
+<td>-</td>
+</tr>
+<tr>
+<td>pgxc-gtm1</td>
+<td>/data/gtm</td>
+</tr>
+<tr>
+<td>pgxc-gtm2</td>
+<td>/data/gtm</td>
+</tr>
+<tr>
+<td>pgxc-n1</td>
+<td>/data/coord, /data/data, /data/coord_s, /data/data_s, /data/gtm_proxy</td>
+</tr>
+<tr>
+<td>pgxc-n2</td>
+<td>/data/coord, /data/data, /data/coord_s, /data/data_s, /data/gtm_proxy</td>
+</tr>
+</tbody>
+</table>
+<p><strong>端口规划：</strong></p>
+<table>
+<thead>
+<tr>
+<th>主机名/ROLE</th>
+<th>端口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pgxc-lvs</td>
+<td>5432(DB)</td>
+</tr>
+<tr>
+<td>pgxc-gtm1</td>
+<td>6666</td>
+</tr>
+<tr>
+<td>pgxc-gtm2</td>
+<td>6666</td>
+</tr>
+<tr>
+<td>gtm_proxy1</td>
+<td>6667</td>
+</tr>
+<tr>
+<td>gtm_proxy2</td>
+<td>6667</td>
+</tr>
+<tr>
+<td>coord1/coord1_pooler Port</td>
+<td>6611/6612</td>
+</tr>
+<tr>
+<td>coord2/coord2_pooler Port</td>
+<td>6611/6612</td>
+</tr>
+<tr>
+<td>coord1_slave/coord1_slave_pooler Port</td>
+<td>6621/6622</td>
+</tr>
+<tr>
+<td>coord2_slave/coord2_slave_pooler Port</td>
+<td>6621/6622</td>
+</tr>
+<tr>
+<td>data1/data1_pooler Port</td>
+<td>6631/6632</td>
+</tr>
+<tr>
+<td>data2/data2_pooler Port</td>
+<td>6631/6632</td>
+</tr>
+<tr>
+<td>data1_slave/data1_slave_pooler Port</td>
+<td>6641/6642</td>
+</tr>
+<tr>
+<td>data1_slave/data1_slave_pooler Port</td>
+<td>6641/6642</td>
+</tr>
+</tbody>
+</table>
+<h1 id="heading-1">软件版本</h1>
+<p>我是用的是Postgres-XL提供的版本，所有节点都安装相同版本的软件包，如下所示为其中一个节点：</p>
+<pre><code>[pgxc@pgxc-gtm1 ~]$ rpm -qa |grep postgres
+postgres-xl95-libs-9.5-1.6.el7.x86_64
+postgres-xl95-gtm-9.5-1.6.el7.x86_64
+postgres-xl95-contrib-9.5-1.6.el7.x86_64
+postgres-xl95-test-9.5-1.6.el7.x86_64
+postgres-xl95-9.5-1.6.el7.x86_64
+postgres-xl95-server-9.5-1.6.el7.x86_64
+postgres-xl95-devel-9.5-1.6.el7.x86_64
+</code></pre>
+<blockquote>
+<p>说明：官方手册是使用源码编译安装，懒得用源码编译，所以提前用源码编译了RPM包，一劳永逸。</p>
+</blockquote>
+<h1 id="heading-2">环境变量</h1>
+<p>所有节点配置相同的环境变量设置，如下：</p>
+<pre><code>[pgxc@pgxc-gtm1 ~]$ tail -n4 ~/.bashrc
+export PGHOME=/usr/postgres-xl-9.5
+export export PGUSER=pgxc
+export LD_LIBRARY_PATH=$PGHOME/lib:$LD_LIBRARY_PATH
+export PATH=$PGHOME/bin:$PATH
+</code></pre>
+<h1 id="heading-3">操作过程</h1>
+<h2 id="heading-4">生成模版配置文件</h2>
+<p>选取任一节点，如pgxc-gtm1节点上操作：</p>
+<pre><code>$ ssh root@10.128.0.31
+$ pgxc_ctl
+
+$ pgxc_ctl
+/usr/bin/bash
+Installing pgxc_ctl_bash script as /home/pgxc/pgxc_ctl/pgxc_ctl_bash.
+ERROR: File &quot;/home/pgxc/pgxc_ctl/pgxc_ctl.conf&quot; not found or not a regular file. No such file or directory
+Installing pgxc_ctl_bash script as /home/pgxc/pgxc_ctl/pgxc_ctl_bash.
+Reading configuration using /home/pgxc/pgxc_ctl/pgxc_ctl_bash --home /home/pgxc/pgxc_ctl --configuration /home/pgxc/pgxc_ctl/pgxc_ctl.conf
+Finished reading configuration.
+   ******** PGXC_CTL START ***************
+
+Current directory: /home/pgxc/pgxc_ctl
+PGXC prepare config empty   # 生成空的配置文件模板
+PGXC exit                   # 退出，也可以执行`quit`。
+</code></pre>
+<h2 id="heading-5">往集群中添加节点</h2>
+<h3 id="gtmmasterstandby">配置gtm节点（master/standby）</h3>
+<pre><code>pgxc_ctl
+add gtm master gtm1 pgxc-gtm1 6666 /data/gtm
+add gtm slave  gtm2 pgxc-gtm2 6666 /data/gtm
+monitor all
+quit
+</code></pre>
+<h2 id="heading-6">设置附加配置文件</h2>
+<p>生成附加配置文件，这两个文件的内容分别需要添加到各节点实例的postgresql.conf和pg_hba.conf文件中：</p>
+<pre><code>cat &gt; ~/pgxc_ctl/coordExtraConfig.conf &lt;&lt;EOF
+#================================================
+# Added to all the coordinator postgresql.conf
+# Original: \$coordExtraConfig
+log_destination = 'stderr'
+logging_collector = on
+log_directory = 'pg_log'
+listen_addresses = '*'
+max_connections = 256
+EOF
+
+cat &gt; ~/pgxc_ctl/coordExtraPgHba.conf &lt;&lt;EOF
+#================================================
+# Added to all the coordinator master's pg_hba.conf
+# Original: \$coordExtraPgHba
+host    all    all    10.128.0.30/32  trust
+host    all    all    10.128.0.31/32  trust
+host    all    all    10.128.0.32/32  trust
+host    all    all    10.128.0.33/32  trust
+host    all    all    10.128.0.34/32  trust
+host    all    all    10.128.0.35/32  trust
+host    all    all    10.128.0.36/32  trust
+host    all    all    0.0.0.0/0       md5
+EOF
+</code></pre>
+<h2 id="masterslave">添加协调节点（Master/Slave）</h2>
+<pre><code>pgxc_ctl
+add coordinator master coord1 pgxc-n1 6611 6612 /data/coord coordExtraConfig.conf coordExtraPgHba.conf
+add coordinator master coord2 pgxc-n2 6611 6612 /data/coord coordExtraConfig.conf coordExtraPgHba.conf
+add coordinator slave coord1 pgxc-n2 6621 6622 /data/coord_s /data/coord_s_arc
+add coordinator slave coord2 pgxc-n1 6621 6622 /data/coord_s /data/coord_s_arc
+monitor coordinator all
+exit
+</code></pre>
+<h3 id="check-backgroud-coordinator-processes">Check backgroud coordinator processes</h3>
+<pre><code>for i in `seq 2`; do echo &quot;===&gt; pgxc-n$i: &quot; &amp;&amp; ssh pgxc@pgxc-n$i &quot;ls -ld /data/coord*&quot; &amp;&amp; echo; done
+for i in `seq 2`; do echo &quot;===&gt; pgxc-n$i: &quot; &amp;&amp; ssh pgxc@pgxc-n$i ps -ef |grep -v grep |grep coordinator &amp;&amp; echo; done
+for i in `seq 2`; do echo &quot;===&gt; pgxc-n$i: &quot; &amp;&amp; ssh pgxc@pgxc-n$i ps -ef |grep -v grep |grep -E '(coordinator|sender|receiver)' &amp;&amp; echo; done
+</code></pre>
+<h2 id="masterslave-1">添加数据节点（Master/Slave）</h2>
+<pre><code>pgxc_ctl
+add datanode master data1 pgxc-n1 6631 6632 /data/data none coordExtraConfig.conf coordExtraPgHba.conf
+add datanode master data2 pgxc-n2 6631 6632 /data/data none coordExtraConfig.conf coordExtraPgHba.conf
+add datanode slave data1 pgxc-n2 6641 6642 /data/data_s none /data/data_s_arc
+add datanode slave data2 pgxc-n1 6641 6642 /data/data_s none /data/data_s_arc
+monitor datanode all
+exit
+</code></pre>
+<h3 id="check-backgroud-datanode-processes">Check backgroud datanode processes</h3>
+<pre><code>for i in `seq 2`; do echo &quot;===&gt; pgxc-n$i: &quot; &amp;&amp; ssh pgxc@pgxc-n$i &quot;ls -ld /data/data*&quot; &amp;&amp; echo; done
+for i in `seq 2`; do echo &quot;===&gt; pgxc-n$i: &quot; &amp;&amp; ssh pgxc@pgxc-n$i ps -ef |grep -v grep |grep datanode &amp;&amp; echo; done
+for i in `seq 2`; do echo &quot;===&gt; pgxc-n$i: &quot; &amp;&amp; ssh pgxc@pgxc-n$i ps -ef |grep -v grep |grep -E '(datanode|sender|receiver)' &amp;&amp; echo; done
+</code></pre>
+<h3 id="gtm-proxy">添加GTM proxy节点</h3>
+<p>首先将GTM proxy节点添加到集群中：</p>
+<pre><code>pgxc_ctl
+add gtm_proxy gtm_proxy1 pgxc-n1 6667 /data/gtm_proxy
+add gtm_proxy gtm_proxy2 pgxc-n2 6667 /data/gtm_proxy
+quit
+</code></pre>
+<p>默认添加后可能起不来，但集群会注册这两个节点信息。</p>
+<p>我们需要分别连接到pgxc-n1和pgxc-n2节点上修改配置文件，然后启动GTM proxy。</p>
+<p>首先，配置pgxc-n1上的GTM proxy，如下所示：</p>
+<pre><code>ssh pgxc-n1
+vi /data/gtm_proxy/gtm_proxy.conf      # 根据需要修改参数配置。
+</code></pre>
+<p>参数配置如下所示：</p>
+<pre><code>nodename = 'gtm_proxy1'
+listen_addresses = '*'
+port = 6667
+worker_threads = 2
+gtm_host = 'pgxc-gtm1'
+gtm_port = 6667
+gtm_connect_retry_interval = 1
+log_file = 'gtm_proxy.log'
+log_min_messages = INFO
+</code></pre>
+<p>启动GTM proxy：</p>
+<pre><code>gtm_proxy -h pgxc-n1 -p 6667 -s pgxc-gtm1 -t 6666 -n 2 -D /data/gtm_proxy/ -l /data/gtm_proxy/gtm_proxy.log &amp;
+exit
+</code></pre>
+<p>然后，对pgxc-n2节点执行类似步骤来启动该节点上的GTM proxy：</p>
+<pre><code>ssh pgxc-n2 
+vi /data/gtm_proxy/gtm_proxy.conf      # 根据需要修改参数配置。
+gtm_proxy -h pgxc-n2 -p 6667 -s pgxc-gtm1 -t 6666 -n 2 -D /data/gtm_proxy/ -l /data/gtm_proxy/gtm_proxy.log &amp;
+exit
+</code></pre>
+<p>然后，回到pgxc_ctl命令行中，观察所有节点状态：</p>
+<pre><code>[pgxc@pgxc-gtm1 ~]$ pgxc_ctl
+/bin/bash
+Installing pgxc_ctl_bash script as /home/pgxc/pgxc_ctl/pgxc_ctl_bash.
+Installing pgxc_ctl_bash script as /home/pgxc/pgxc_ctl/pgxc_ctl_bash.
+Reading configuration using /home/pgxc/pgxc_ctl/pgxc_ctl_bash --home /home/pgxc/pgxc_ctl --configuration /home/pgxc/pgxc_ctl/pgxc_ctl.conf
+Finished reading configuration.
+******** PGXC_CTL START ***************
+
+Current directory: /home/pgxc/pgxc_ctl
+PGXC monitor all
+Running: gtm master
+Running: gtm slave
+Running: gtm proxy gtm_proxy1
+Running: gtm proxy gtm_proxy2
+Running: coordinator master coord1
+Running: coordinator slave coord1
+Running: coordinator master coord2
+Running: coordinator slave coord2
+Running: datanode master data1
+Running: datanode slave data1
+Running: datanode master data2
+Running: datanode slave data2
+PGXC
+</code></pre>
+<h1 id="pgxc-ctl">pgxc_ctl使用帮助</h1>
+<p><code>pgxc_ctl</code>工具也可以执行节点删除等工作，使用<code>help COMMAND</code>查看帮助信息，如下所示：</p>
+<pre><code>PGXC help
+You are using pgxc_ctl, the configuration utility for PGXL
+Type:
+    help &lt;command&gt;
+    where &lt;command&gt; is either add, Createdb, Createuser, clean,
+        configure, deploy, failover, init, kill, log, monitor,
+        prepare, q, reconnect, remove, set, show, start,
+        stop or unregister
+
+PGXC help remove
+
+remove gtm slave
+remove gtm_proxy nodename [ clean ]
+remove coordinator [ master| slave ] nodename [ clean ]
+remove datanode [ master| slave ] nodename [ clean ]
+
+Removes the specified node from the cluster
+For more details, please see the pgxc_ctl documentation
+
+PGXC
+</code></pre>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉 </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/>https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/</span>
+            </p>
+            
+             
+            <p class="copyright-item lincese">
+                本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2020/install-percona-toolkit/" class="prev" rel="prev" title="在Linux上手动编译安装Percona Toolkit工具"><i class="iconfont icon-left"></i>&nbsp;在Linux上手动编译安装Percona Toolkit工具</a>
+         
+        
+        <a href="https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/" class="next" rel="next" title="用pgbadger工具分析PostgreSQL的系统日志（生成html报告）">用pgbadger工具分析PostgreSQL的系统日志（生成html报告）&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

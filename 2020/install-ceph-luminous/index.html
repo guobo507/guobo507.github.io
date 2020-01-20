@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2019/install-brew-on-macos/" />
+  <link rel="next" href="https://guobo507.github.io/2020/deploy-private-docker-registry/" />
+  <link rel="canonical" href="https://guobo507.github.io/2020/install-ceph-luminous/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           在CentOS 7上部署CEPH（luminous）分布式对象存储集群系统 | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="在CentOS 7上部署CEPH（luminous）分布式对象存储集群系统 | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "在CentOS 7上部署CEPH（luminous）分布式对象存储集群系统",
+    "headline" : "在CentOS 7上部署CEPH（luminous）分布式对象存储集群系统",
+    "description" : "参考链接：\n 如何使用国内源部署Ceph：https:\/\/www.cnblogs.com\/bodhitree\/p\/5993722.html Ceph - Gitbook：https:\/\/www.wanglibing.com\/ceph  软件版本：\n CEPH软件包：12.2.9 (9e300932ef8a8916fb3fda78c58691a6ab0f4217) luminous (stable) ceph-deploy：2.0.1  基础环境：\n 规划搭建的CEPH集群共有5个节点，所有节点安装和运行CentOS 7.5 x86_64操作系统； 各节点仅采用最小化安装方式安装好操作系统，并按照下面表格中规划配置好IP地址、主机名以及DNS服务器地址； 安装过程中，需要从在线更新内核，在线安装CEPH软件包，因此所有节点必须具备访问互联网的能力；  各节点基本信息及角色规划如下表所示：\n   主机名称 IP地址（Public Network\/Cluster Network） CPU\/MEM\/DISK 角色规划（备注）     ceph-n81 192.168.18.81\/10.128.0.1 3C\/10G\/40GB MON\/OSD\/MDS\/RADOSGW   ceph-n82 192.168.18.82\/10.128.0.2 3C\/10G\/40GB MON\/OSD   ceph-n83 192.168.18.83\/10.128.0.3 3C\/10G\/40GB MON\/OSD   ceph-n84 192.168.18.84\/10.128.0.4 3C\/10G\/40GB OSD   ceph-n85 192.168.18.85\/10.128.0.5 3C\/10G\/40GB OSD    1 安装ansible  说明：本章以下操作若无特殊说明，均在节点ceph-n81上执行。",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉",
+    "creator" : "肉啃肉",
+    "publisher": "肉啃肉",
+    "accountablePerson" : "肉啃肉",
+    "copyrightHolder" : "肉啃肉",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-01 17:10:41 \x2b0800 CST",
+    "dateModified" : "2020-01-01 17:10:41 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/install-ceph-luminous\/",
+    "wordCount" : "2251",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">在CentOS 7上部署CEPH（luminous）分布式对象存储集群系统</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-01 itemprop="datePublished">January 1, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p><strong>参考链接</strong>：</p>
+<ul>
+<li>如何使用国内源部署Ceph：<a href="https://www.cnblogs.com/bodhitree/p/5993722.html">https://www.cnblogs.com/bodhitree/p/5993722.html</a></li>
+<li>Ceph - Gitbook：<a href="https://www.wanglibing.com/ceph">https://www.wanglibing.com/ceph</a></li>
+</ul>
+<p><strong>软件版本</strong>：</p>
+<ul>
+<li>CEPH软件包：12.2.9 (9e300932ef8a8916fb3fda78c58691a6ab0f4217) luminous (stable)</li>
+<li>ceph-deploy：2.0.1</li>
+</ul>
+<p><strong>基础环境</strong>：</p>
+<ol>
+<li>规划搭建的CEPH集群共有5个节点，所有节点安装和运行CentOS 7.5 x86_64操作系统；</li>
+<li>各节点仅采用最小化安装方式安装好操作系统，并按照下面表格中规划配置好IP地址、主机名以及DNS服务器地址；</li>
+<li>安装过程中，需要从在线更新内核，在线安装CEPH软件包，因此所有节点必须具备访问互联网的能力；</li>
+</ol>
+<p>各节点基本信息及角色规划如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>主机名称</th>
+<th>IP地址（Public Network/Cluster Network）</th>
+<th>CPU/MEM/DISK</th>
+<th>角色规划（备注）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ceph-n81</td>
+<td>192.168.18.81/10.128.0.1</td>
+<td>3C/10G/40GB</td>
+<td>MON/OSD/MDS/RADOSGW</td>
+</tr>
+<tr>
+<td>ceph-n82</td>
+<td>192.168.18.82/10.128.0.2</td>
+<td>3C/10G/40GB</td>
+<td>MON/OSD</td>
+</tr>
+<tr>
+<td>ceph-n83</td>
+<td>192.168.18.83/10.128.0.3</td>
+<td>3C/10G/40GB</td>
+<td>MON/OSD</td>
+</tr>
+<tr>
+<td>ceph-n84</td>
+<td>192.168.18.84/10.128.0.4</td>
+<td>3C/10G/40GB</td>
+<td>OSD</td>
+</tr>
+<tr>
+<td>ceph-n85</td>
+<td>192.168.18.85/10.128.0.5</td>
+<td>3C/10G/40GB</td>
+<td>OSD</td>
+</tr>
+</tbody>
+</table>
+<h1 id="1-ansible">1 安装ansible</h1>
+<blockquote>
+<p><strong>说明</strong>：本章以下操作若无特殊说明，均在节点<code>ceph-n81</code>上执行。</p>
+</blockquote>
+<h2 id="11-root">1.1 配置root用户免密登陆</h2>
+<p>要正常使用ansible工具，root用户需要能无密码访问其余所有节点。</p>
+<h3 id="111-">1.1.1 配置主机名解析</h3>
+<pre><code>echo &gt;&gt; /etc/hosts
+cat &lt;&lt;EOF &gt;&gt; /etc/hosts
+192.168.18.81    ceph-n81
+192.168.18.82    ceph-n82
+192.168.18.83    ceph-n83
+192.168.18.84    ceph-n84
+192.168.18.85    ceph-n85
+EOF
+</code></pre>
+<h3 id="112-ssh">1.1.2 创建ssh密钥</h3>
+<pre><code>ssh-keygen -t rsa -P '' -f '/root/.ssh/id_rsa'
+</code></pre>
+<h3 id="113-">1.1.3 拷贝密钥到其他节点</h3>
+<pre><code>for i in `seq 1 5`; do ssh-copy-id root@ceph-n8$i; done
+</code></pre>
+<h3 id="114-hosts">1.1.4 拷贝hosts文件到其他节点</h3>
+<pre><code>for i in `seq 2 5`; do scp /etc/hosts ceph-n8$i:/etc; done
+</code></pre>
+<h3 id="115-ssh">1.1.5 测试SSH免密登陆</h3>
+<pre><code>for i in `seq 1 5`; do ssh ceph-n8$i 'hostname &amp;&amp; id'; done
+</code></pre>
+<h3 id="116-config">1.1.6 生成config文件</h3>
+<pre><code>cat &lt;&lt;EOF &gt; ~/.ssh/config
+Host ceph-n81
+Hostname ceph-n81
+User root
+Host ceph-n82
+Hostname ceph-n82
+User root
+Host ceph-n83
+Hostname ceph-n83
+User root
+Host ceph-n84
+Hostname ceph-n84
+User root
+Host ceph-n85
+Hostname ceph-n85
+User root
+EOF
+
+chmod 440 ~/.ssh/config
+</code></pre>
+<h1 id="12-ansible">1.2 安装和配置ansible</h1>
+<h2 id="121-ansible">1.2.1 安装ansible软件</h2>
+<pre><code>yum install -y ansible
+</code></pre>
+<h2 id="122-ansible">1.2.2 配置ansible</h2>
+<pre><code>sed -i &quot;/^#host_key_checking/s/#//g&quot; /etc/ansible/ansible.cfg
+</code></pre>
+<h2 id="123-ansible">1.2.3 添加ansible主机</h2>
+<pre><code>cat &lt;&lt;EOF &gt;&gt; /etc/ansible/hosts
+[mon]
+ceph-n81
+ceph-n82
+ceph-n83
+
+[osd]
+ceph-n84
+ceph-n85
+EOF
+</code></pre>
+<h2 id="124-ansible">1.2.4 测试ansible功能</h2>
+<pre><code>ansible all -m ping
+</code></pre>
+<h1 id="2-">2 系统配置</h1>
+<blockquote>
+<p><strong>说明</strong>：本章以下操作若无特殊说明，均在节点<code>ceph-n81</code>上执行。</p>
+</blockquote>
+<h2 id="21-">2.1 禁用防火墙</h2>
+<pre><code>ansible all -m shell -a 'systemctl disable firewalld'
+ansible all -m shell -a 'systemctl stop firewalld'
+</code></pre>
+<h2 id="22-selinux">2.2 禁用SELinux</h2>
+<pre><code>ansible all -m shell -a 'sed -i &quot;/SELINUX=/s/enforcing/disabled/g&quot; /etc/selinux/config'
+ansible all -m shell -a 'sed -i s&quot;/Defaults requiretty/#Defaults requiretty&quot;/g /etc/sudoers'
+</code></pre>
+<h2 id="23-">2.3 升级系统内核</h2>
+<h3 id="231-elrepo">2.3.1 安装elrepo源</h3>
+<pre><code>ansible all -m shell -a &quot;rpm -Uvh https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm&quot;
+</code></pre>
+<h3 id="232-">2.3.2 查看最新内核版本</h3>
+<pre><code>yum --enablerepo=elrepo-kernel --showduplicates list kernel-lt
+</code></pre>
+<h3 id="233-">2.3.3 安装新版内核</h3>
+<pre><code>ansible all -m shell -a &quot;yum --enablerepo=elrepo-kernel install -y kernel-ml-devel kernel-ml&quot;
+</code></pre>
+<h3 id="234-">2.3.4 查看当前系统启动内核项</h3>
+<pre><code>ansible all -m shell -a &quot;grub2-editenv list&quot;
+</code></pre>
+<h3 id="235-">2.3.5 查看已经安装的内核项</h3>
+<pre><code>grep ^menuentry /boot/grub2/grub.cfg |awk -F &quot;'&quot; '{print $2}'
+</code></pre>
+<h3 id="236-">2.3.6 修改系统启动内核项</h3>
+<p>从上面系统已安装的启动内核项中选择最新的版本：<code>CentOS Linux (4.19.1-1.el7.elrepo.x86_64) 7 (Core)</code>，并按照如下命令，将其设置为默认系统启动内核：</p>
+<pre><code>ansible all -m shell -a &quot;grub2-set-default 'CentOS Linux (4.19.1-1.el7.elrepo.x86_64) 7 (Core)'&quot;
+</code></pre>
+<h3 id="237-">2.3.7 重启所有节点</h3>
+<pre><code>for i in 5 4 3 2 1; do ssh ceph-n8$i reboot; done
+</code></pre>
+<h2 id="24-">2.4 卸载旧的内核</h2>
+<pre><code>ansible all -m shell -a &quot;yum remove -y `rpm -qa |grep kernel |grep 3.10`&quot;
+</code></pre>
+<h2 id="25-rbd">2.5 加载rbd内核模块</h2>
+<pre><code>ansible all -m shell -a &quot;modprobe rbd &amp;&amp; lsmod |grep rbd&quot;
+ansible all -m shell -a &quot;echo modprobe rbd &gt;&gt; /etc/rc.local &amp;&amp; chmod a+x /etc/rc.d/rc.local /etc/rc.local&quot;
+</code></pre>
+<h2 id="26-">2.6 配置时间同步</h2>
+<pre><code>ansible all -m shell -a 'yum install -y ntp ntpdate'
+ansible all -m shell -a 'ntpdate 192.168.18.3'
+ansible all -m shell -a 'sed -i &quot;/^server /d&quot; /etc/ntp.conf'
+ansible all -m shell -a 'echo &quot;server 192.168.18.3 iburst&quot; &gt;&gt; /etc/ntp.conf'
+ansible all -m shell -a 'tail -n1 /etc/ntp.conf'
+
+ansible all -m shell -a 'hwclock --systohc'
+ansible all -m shell -a 'systemctl enable ntpd.service'
+ansible all -m shell -a 'systemctl start ntpd.service'
+ansible all -m shell -a 'ntpq -p'
+</code></pre>
+<h1 id="3-ceph-deploy">3 安装ceph-deploy</h1>
+<blockquote>
+<p><strong>说明</strong>：本章以下操作若无特殊说明，均在节点<code>ceph-n81</code>上执行。</p>
+</blockquote>
+<h2 id="31-ceph">3.1 配置ceph用户</h2>
+<h3 id="311-cephuser">3.1.1 创建cephuser</h3>
+<pre><code>ansible all -m shell -a 'useradd -d /home/cephuser -m cephuser'
+ansible all -m shell -a 'echo cephuser |passwd --stdin cephuser'
+</code></pre>
+<h2 id="312-cephusersudo">3.1.2 为cephuser赋予sudo权限</h2>
+<pre><code>ansible all -m shell -a 'echo &quot;cephuser ALL = (root) NOPASSWD:ALL&quot; | sudo tee /etc/sudoers.d/cephuser'
+ansible all -m shell -a 'chmod 0440 /etc/sudoers.d/cephuser'
+</code></pre>
+<h2 id="32-cephuser">3.2 为cephuser配置免密登陆</h2>
+<h3 id="321-ssh">3.2.1 创建ssh密钥</h3>
+<pre><code>su - cephuser
+ssh-keygen -t rsa -P '' -f '/home/cephuser/.ssh/id_rsa'
+</code></pre>
+<h3 id="322-ssh">3.2.2 分发ssh密钥</h3>
+<pre><code>for i in `seq 1 5`; do ssh-copy-id cephuser@ceph-n8$i; done
+</code></pre>
+<h3 id="323-">3.2.3 测试免密登陆</h3>
+<pre><code>for i in `seq 1 5`; do ssh cephuser@ceph-n8$i 'hostname &amp;&amp; id'; done
+</code></pre>
+<h3 id="324-">3.2.4 生成配置文件</h3>
+<pre><code>cat &lt;&lt;EOF &gt; ~/.ssh/config
+Host ceph-n81
+Hostname ceph-n81
+User cephuser
+Host ceph-n82
+Hostname ceph-n82
+User cephuser
+Host ceph-n83
+Hostname ceph-n83
+User cephuser
+Host ceph-n84
+Hostname ceph-n84
+User cephuser
+Host ceph-n85
+Hostname ceph-n85
+User cephuser
+EOF
+
+chmod 440 ~/.ssh/config
+</code></pre>
+<h2 id="33-">3.3 创建磁盘分区</h2>
+<p>本例中，每个节点除了系统盘外，还均配置了5块磁盘，其中规划4块用作Ceph的数据盘（/dev/sd[b-e]），1块用作Ceph的Journal日志盘（/dev/sdf）。</p>
+<h3 id="331-">3.3.1 创建工作目录</h3>
+<pre><code>mkdir /home/cephuser/ceph-deploy
+chown cephuser.cephuser /home/cephuser/ceph-deploy
+</code></pre>
+<h3 id="332-">3.3.2 创建磁盘分区脚本</h3>
+<pre><code>cat &lt;&lt; EOF &gt; /home/cephuser/ceph-deploy/create-partition.sh
+#!/bin/bash
+# 
+ansible all -m shell -a 'parted -s /dev/sdb mklabel gpt mkpart primary xfs 0% 100%'
+ansible all -m shell -a 'parted -s /dev/sdc mklabel gpt mkpart primary xfs 0% 100%'
+ansible all -m shell -a 'parted -s /dev/sdd mklabel gpt mkpart primary xfs 0% 100%'
+ansible all -m shell -a 'parted -s /dev/sde mklabel gpt mkpart primary xfs 0% 100%'
+
+ansible all -m shell -a 'mkfs.xfs /dev/sdb -f'
+ansible all -m shell -a 'mkfs.xfs /dev/sdc -f'
+ansible all -m shell -a 'mkfs.xfs /dev/sdd -f'
+ansible all -m shell -a 'mkfs.xfs /dev/sde -f'
+
+ansible all -m shell -a 'parted -s /dev/sdf mklabel gpt mkpart primary 0% 25% mkpart primary 26% 50% mkpart primary 51% 75% mkpart primary 76% 100%'
+EOF
+</code></pre>
+<h3 id="333-">3.3.3 运行磁盘分区脚本</h3>
+<pre><code>chmod u+x /home/cephuser/ceph-deploy/create-partition.sh
+/home/cephuser/ceph-deploy/create-partition.sh
+</code></pre>
+<h3 id="334-">3.3.4 检查磁盘分区</h3>
+<pre><code>ansible all -m shell -a 'ls -l /dev/sd[b-f]*'
+</code></pre>
+<h2 id="34-ceph-deploy">3.4 安装ceph-deploy</h2>
+<h3 id="341-ceph">3.4.1 安装ceph源</h3>
+<pre><code>su - cephuser
+ansible all -m shell -a &quot;sudo rpm -Uhv http://download.ceph.com/rpm-luminous/el7/noarch/ceph-release-1-1.el7.noarch.rpm&quot;
+ansible all -m shell -a &quot;sudo yum install -y epel-release&quot;
+ansible all -m shell -a &quot;sudo yum makecache fast&quot;
+</code></pre>
+<h3 id="342-ceph-deploy">3.4.2 安装ceph-deploy工具</h3>
+<pre><code>sudo rpm -Uvh http://download.ceph.com/rpm-luminous/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm
+</code></pre>
+<blockquote>
+<p><strong>注意</strong>：ceph-deploy工具只需要在节点<code>ceph-n81</code>上安装即可。</p>
+</blockquote>
+<h1 id="4-ceph">4 安装和配置ceph集群</h1>
+<blockquote>
+<p><strong>说明</strong>：本章以下操作若无特殊说明，均在节点<code>ceph-n81</code>上执行。</p>
+</blockquote>
+<h2 id="41-">4.1 生成集群配置</h2>
+<h3 id="411-mon">4.1.1 声明集群mon节点</h3>
+<pre><code>su - cephuser
+cd ~/ceph-deploy
+ceph-deploy new ceph-n81 ceph-n82 ceph-n83
+</code></pre>
+<blockquote>
+<p><strong>说明</strong>：在当前目录执行<code>ls -l</code>可以看到生成的集群配置文件，此目录将作为ceph-deploy工具的工作目录，凡执行ceph-deploy命令均需要进入该目录，本例中还需要先切换至<code>cephuser</code>用户下执行。</p>
+</blockquote>
+<h3 id="412-">4.1.2 优化集群配置</h3>
+<pre><code>cat &lt;&lt;EOF &gt;&gt; ./ceph.conf
+public network = 192.168.18.0/24
+cluster network = 10.128.0.0/28
+
+# Choose reasonable numbers for number of replicas and placement groups.
+osd pool default size = 1 # Write an object 2 times
+osd pool default min size = 1 # Allow writing 1 copy in a degraded state
+osd pool default pg num = 256
+osd pool default pgp num = 256
+
+# Choose a reasonable crush leaf type
+# 0 for a 1-node cluster.
+# 1 for a multi node cluster in a single rack
+# 2 for a multi node, multi chassis cluster with multiple hosts in a chassis
+# 3 for a multi node cluster with hosts across racks, etc.
+osd crush chooseleaf type = 1
+EOF
+</code></pre>
+<h2 id="42-ceph">4.2 安装ceph集群</h2>
+<h3 id="421-ceph">4.2.1 安装ceph软件包</h3>
+<p>执行如下命令在所有节点上安装ceph相关软件包：</p>
+<pre><code>ceph-deploy install ceph-n81 ceph-n82 ceph-n83 ceph-n84 ceph-n85
+for i in `seq 1 5`; do ssh ceph-n8$i 'sudo yum install -y ceph ceph-radosgw'; done
+ansible all -m shell -a 'sudo yum install -y ceph ceph-radosgw'
+</code></pre>
+<blockquote>
+<p><strong>说明</strong>：上述三条命令选择任意一条均可，具体视网络条件而定。</p>
+</blockquote>
+<h2 id="422-mon">4.2.2 初始化mon集群服务</h2>
+<pre><code>ceph-deploy mon create-initial
+</code></pre>
+<h3 id="423-ceph-n81key">4.2.3 收集ceph-n81节点的key文件</h3>
+<pre><code>ceph-deploy gatherkeys ceph-n81
+</code></pre>
+<h3 id="424-mgr">4.2.4 启用高可用mgr服务</h3>
+<pre><code>ceph-deploy mgr create ceph-n81 ceph-n82 ceph-n83
+</code></pre>
+<h3 id="425-osd">4.2.5 准备osd磁盘</h3>
+<p>在ceph-deploy工作目录下创建初始化osd磁盘的脚本：</p>
+<pre><code>cat &lt;&lt;EOF &gt; ./create-osd.sh
+#!/bin/bash
+#
+ceph-deploy disk zap ceph-n81 /dev/sdb /dev/sdc /dev/sdd /dev/sde
+ceph-deploy disk zap ceph-n82 /dev/sdb /dev/sdc /dev/sdd /dev/sde
+ceph-deploy disk zap ceph-n83 /dev/sdb /dev/sdc /dev/sdd /dev/sde
+ceph-deploy disk zap ceph-n84 /dev/sdb /dev/sdc /dev/sdd /dev/sde
+ceph-deploy disk zap ceph-n85 /dev/sdb /dev/sdc /dev/sdd /dev/sde
+
+ceph-deploy osd create --data /dev/sdb --journal /dev/sdf1 --fs-type xfs ceph-n81 
+ceph-deploy osd create --data /dev/sdc --journal /dev/sdf2 --fs-type xfs ceph-n81 
+ceph-deploy osd create --data /dev/sdd --journal /dev/sdf3 --fs-type xfs ceph-n81 
+ceph-deploy osd create --data /dev/sde --journal /dev/sdf4 --fs-type xfs ceph-n81 
+
+ceph-deploy osd create --data /dev/sdb --journal /dev/sdf1 --fs-type xfs ceph-n82 
+ceph-deploy osd create --data /dev/sdc --journal /dev/sdf2 --fs-type xfs ceph-n82 
+ceph-deploy osd create --data /dev/sdd --journal /dev/sdf3 --fs-type xfs ceph-n82 
+ceph-deploy osd create --data /dev/sde --journal /dev/sdf4 --fs-type xfs ceph-n82 
+
+ceph-deploy osd create --data /dev/sdb --journal /dev/sdf1 --fs-type xfs ceph-n83 
+ceph-deploy osd create --data /dev/sdc --journal /dev/sdf2 --fs-type xfs ceph-n83 
+ceph-deploy osd create --data /dev/sdd --journal /dev/sdf3 --fs-type xfs ceph-n83 
+ceph-deploy osd create --data /dev/sde --journal /dev/sdf4 --fs-type xfs ceph-n83 
+
+ceph-deploy osd create --data /dev/sdb --journal /dev/sdf1 --fs-type xfs ceph-n84 
+ceph-deploy osd create --data /dev/sdc --journal /dev/sdf2 --fs-type xfs ceph-n84 
+ceph-deploy osd create --data /dev/sdd --journal /dev/sdf3 --fs-type xfs ceph-n84 
+ceph-deploy osd create --data /dev/sde --journal /dev/sdf4 --fs-type xfs ceph-n84 
+
+ceph-deploy osd create --data /dev/sdb --journal /dev/sdf1 --fs-type xfs ceph-n85 
+ceph-deploy osd create --data /dev/sdc --journal /dev/sdf2 --fs-type xfs ceph-n85 
+ceph-deploy osd create --data /dev/sdd --journal /dev/sdf3 --fs-type xfs ceph-n85 
+ceph-deploy osd create --data /dev/sde --journal /dev/sdf4 --fs-type xfs ceph-n85 
+EOF
+</code></pre>
+<p>运行该脚本文件：</p>
+<pre><code>chmod u+x ./create-osd.sh
+./create-osd.sh
+</code></pre>
+<p>检查osd磁盘初始化结果：</p>
+<pre><code>ansible all -m shell -a &quot;ls -l /var/lib/ceph/osd/*&quot;
+</code></pre>
+<h2 id="43-mon">4.3 启用mon系统服务</h2>
+<pre><code>su - cephuser
+ansible all -m shell -a 'sudo systemctl enable ceph-mon.target'
+</code></pre>
+<h2 id="44-mon">4.4 查看mon节点状态</h2>
+<pre><code>ceph mon stat
+ceph mon dump
+</code></pre>
+<h2 id="45-">4.5 分发集群配置</h2>
+<p>将集群管理员<code>admin</code>用户的keyring文件分发到所有节点：</p>
+<pre><code>su - cephuser
+cd ~/ceph-deploy
+ceph-deploy admin ceph-n81 ceph-n82 ceph-n83 ceph-n84 ceph-n85
+</code></pre>
+<p>查看并修改keyring文件的权限：</p>
+<pre><code>ansible all -m shell -a 'ls -l /etc/ceph/ceph.client.admin.keyring'
+ansible all -m shell -a 'sudo chmod +r /etc/ceph/ceph.client.admin.keyring'
+</code></pre>
+<h2 id="46-">4.6 重启所有节点</h2>
+<p>在节点<code>ceph-n81</code>上执行如下命令，重启所有节点：</p>
+<pre><code>for i in 5 4 3 2 1; do ssh ceph-n8$i 'sudo reboot'; done
+</code></pre>
+<p>重启完成后，执行如下操作验证结果：</p>
+<pre><code>ansible all -m shell -a &quot;ps -ef |grep ceph&quot;
+ansible all -m shell -a 'df -h |grep ceph'
+ansible mon -m shell -a 'ps -ef  |grep ceph-mon'
+</code></pre>
+<blockquote>
+<p><strong>说明</strong>：本步骤非必需，但建议执行，以验证配置结果是否正确。</p>
+</blockquote>
+<h2 id="47-cephfs">4.7 配置和使用CephFS</h2>
+<h3 id="471-mds">4.7.1 部署mds服务</h3>
+<p>执行如下命令，将节点<code>ceph-n81</code>部署为mds服务器：</p>
+<pre><code>su - cephuser
+cd ~/ceph-deploy
+ceph-deploy mds create ceph-n81
+</code></pre>
+<p>查看mds服务器状态：</p>
+<pre><code>sudo ceph mds stat
+</code></pre>
+<h3 id="472-cephfs">4.7.2 创建cephfs文件系统</h3>
+<pre><code>sudo ceph osd pool create data_fs1 256
+sudo ceph osd pool create metadata_fs1 256
+sudo ceph fs new ceph_fs1 metadata_fs1 data_fs1
+</code></pre>
+<h3 id="473-">4.7.3 查看结果</h3>
+<pre><code>sudo ceph fs ls
+</code></pre>
+<h2 id="474-cephfs">4.7.4 客户端挂载cephfs</h2>
+<p>挂载cephfs有两种方式，下面分别说明：</p>
+<ul>
+<li>
+<p><strong>方式一</strong>：挂载到Kernel</p>
+<p>客户端上须执行如下操作，安装ceph-common软件包：</p>
+<pre><code>rpm -Uhv http://download.ceph.com/rpm-luminous/el7/noarch/ceph-release-1-1.el7.noarch.rpm
+yum install -y epel-release
+yum makecache fast
+yum install -y ceph-common-12.2.9-0.el7.x86_64
+</code></pre><p>配置主机名解析：</p>
+<pre><code>cat &lt;&lt;EOF &gt;&gt; /etc/hosts
+192.168.18.81    ceph-n81
+192.168.18.82    ceph-n82
+192.168.18.83    ceph-n83
+EOF
+</code></pre><p>获取认证keyring和集群配置文件：</p>
+<pre><code>scp ceph-n81:/etc/ceph/{ceph.client.admin.keyring,ceph.conf} /etc/ceph/
+</code></pre><p>创建挂载点：</p>
+<pre><code>mkdir -p /mnt/ceph_fs1
+</code></pre><p>可以使用key直接挂载：</p>
+<pre><code>mount -t ceph ceph-n81:6789,ceph-n82:6789,ceph-n83:6789:/ /mnt/ceph_fs1 -o name=admin,secret=$(grep key /etc/ceph/ceph.client.admin.keyring |awk '{print $NF}')
+</code></pre><p>也可以参照如下方式，使用指定的keyfile进行挂载：</p>
+<pre><code>echo $(grep key /etc/ceph/ceph.client.admin.keyring |awk '{print $NF}') &gt; /etc/ceph/cephfs_keyring
+mount -t ceph ceph-n81:6789,ceph-n82:6789,ceph-n83:6789:/ /mnt/ceph_fs1 -o name=admin,secretfile=/etc/ceph/cephfs_keyring
+</code></pre></li>
+<li>
+<p><strong>方式二</strong>：挂载到Fuse</p>
+<p>客户端上安装ceph-fuse软件包：</p>
+<pre><code>yum -y install ceph-fuse
+</code></pre><p>获取keyring和集群配置文件：</p>
+<pre><code>scp ceph-n81:/etc/ceph/{ceph.client.admin.keyring,ceph.conf} /etc/ceph/
+</code></pre><p>创建挂载点：</p>
+<pre><code>mkdir -p /mnt/ceph_fs1
+</code></pre><p>挂载cephfs到Fuse：</p>
+<pre><code>ceph-fuse --keyring /etc/ceph/ceph.client.admin.keyring --name client.admin /mnt/ceph_fs1
+</code></pre><p>检查挂载结果：</p>
+<pre><code>df -h |grep fuse
+</code></pre></li>
+</ul>
+<blockquote>
+<p><strong>说明</strong>：若需要配置开机自动挂载，则将挂载命令写入到<code>/etc/rc.local</code>文件或编辑<code>/etc/fstab</code>文件均可，具体修改办法参考“<a href="http://docs.ceph.org.cn/cephfs/fstab/">用 fstab挂载</a>”，或“<a href="https://www.wanglibing.com/ceph/book/%E9%99%84%E5%BD%95/%E8%87%AA%E5%8A%A8%E6%8C%82%E8%BD%BD.html">内核驱动自动挂载Cephfs</a>”。</p>
+</blockquote>
+<h2 id="48-rbd">4.8 配置和使用RBD</h2>
+<h3 id="481-">4.8.1 服务器端准备</h3>
+<p>创建rbd专用账户：</p>
+<pre><code>su - cephuser &amp;&amp; cd ~/ceph-deploy
+ceph auth get-or-create client.rbd mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool=rbd_pool'
+</code></pre>
+<p>推送配置文件到集群各节点上：</p>
+<pre><code>ceph-deploy --overwrite-conf config push ceph-n81 ceph-n82 ceph-n83 ceph-n84 ceph-n85
+</code></pre>
+<p>将rbd用户key保存至keyring文件：</p>
+<pre><code>ceph auth get-or-create client.rbd | sudo tee /etc/ceph/ceph.client.rbd.keyring
+</code></pre>
+<p>重命名keyring文件：</p>
+<pre><code>sudo cp /etc/ceph/ceph.client.rbd.keyring /etc/ceph/keyring
+</code></pre>
+<p>创建rbd_pool池：</p>
+<pre><code>ceph osd pool create rbd_pool 128 128 replicated
+</code></pre>
+<p>启用rbd_pool池的rbd功能：</p>
+<pre><code>ceph osd pool application enable rbd_pool rbd
+</code></pre>
+<p>检查集群状态：</p>
+<pre><code>ceph -s
+</code></pre>
+<p>检查osd和池：</p>
+<pre><code>ceph osd lspools
+ceph osd status
+</code></pre>
+<p>创建rbd设备:</p>
+<pre><code>sudo rbd create --user rbd --size 51200 test_image_1 -p rbd_pool
+</code></pre>
+<p>查看rbd设备信息：</p>
+<pre><code>sudo rbd info --user rbd rbd_pool/test_image_1
+</code></pre>
+<p>（可选）测试rbd用户是否具备rbd设备resize/remove功能：</p>
+<pre><code>sudo rbd resize --user rbd --size 102400 test_image_1 -p rbd_pool
+sudo rbd resize --user rbd --size 81920 test_image_1 -p rbd_pool --allow-shrink
+sudo rbd remove --user rbd rbd_pool/test_image_1
+</code></pre>
+<h3 id="482-">4.8.2 客户端准备</h3>
+<p>客户端上须执行如下操作，安装ceph-common软件包：</p>
+<pre><code>rpm -Uhv http://download.ceph.com/rpm-luminous/el7/noarch/ceph-release-1-1.el7.noarch.rpm
+yum install -y epel-release
+yum makecache fast
+yum install -y ceph-common-12.2.9-0.el7.x86_64
+</code></pre>
+<h3 id="482-rbd">4.8.2 加载rbd驱动</h3>
+<pre><code>modprobe rbd
+lsmod |grep rbd
+</code></pre>
+<p>获取rbd用户keyring文件和集群配置文件</p>
+<pre><code>scp /etc/ceph/{ceph.conf,ceph.client.rbd.keyring,keyring} ceph-n8$i:/etc/ceph
+</code></pre>
+<p>测试rbd用户能否查看集群状态：</p>
+<pre><code>ceph -s --name client.rbd
+</code></pre>
+<p>挂载rbd设备：</p>
+<pre><code>$ sudo rbd map --user rbd rbd_pool/test_image_1
+rbd: sysfs write failed
+RBD image feature set mismatch. You can disable features unsupported by the kernel with &quot;rbd feature disable rbd_pool/test_image_1 object-map fast-diff deep-flatten&quot;.
+In some cases useful info is found in syslog - try &quot;dmesg | tail&quot;.
+rbd: map failed: (6) No such device or address
+</code></pre>
+<p>若出现上述错误，说明当前内核有不支持的rbd特性，根据提示禁用该特性即可：</p>
+<pre><code>rbd feature disable rbd_pool/test_image_1 object-map fast-diff deep-flatten
+</code></pre>
+<blockquote>
+<p>建议：客户端内核版本和服务器端内核版本保持一致，至少大版本号应该保持一致。</p>
+</blockquote>
+<p>重新挂载rbd设备：sudo</p>
+<pre><code>sudo rbd map --user rbd rbd_pool/test_image_1
+</code></pre>
+<p>查看挂载好的rbd设备信息：</p>
+<pre><code>sudo fdisk -l /dev/rbd0
+</code></pre>
+<p>卸载rbd设备只需执行如下命令即可：</p>
+<pre><code>rbd unmap --user rbd rbd_pool/test_image_1
+</code></pre>
+<h1 id="49-radosgw">4.9 配置和使用RADOSGW</h1>
+<h3 id="491-ceph-object-gateway">4.9.1 配置Ceph Object Gateway</h3>
+<pre><code>su - cephuser
+cd ~/ceph-deploy
+ceph-deploy install --rgw ceph-n81
+</code></pre>
+<h3 id="492-gather-keys">4.9.2 Gather keys</h3>
+<pre><code>ceph-deploy gatherkeys ceph-n81
+</code></pre>
+<h3 id="493-ceph-object-gateway">4.9.3 创建Ceph Object Gateway实例</h3>
+<pre><code>ceph-deploy rgw create ceph-n81
+</code></pre>
+<h3 id="494-rgw">4.9.4 检查RGW安装</h3>
+<pre><code>$ curl http://192.168.18.81:7480
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;ListAllMyBucketsResult xmlns=&quot;http://s3.amazonaws.com/doc/2006-03-01/&quot;&gt;&lt;Owner&gt;&lt;ID&gt;anonymous&lt;/ID&gt;&lt;DisplayName&gt;&lt;/DisplayName&gt;&lt;/Owner&gt;&lt;Buckets&gt;&lt;/Buckets&gt;&lt;/ListAllMyBucketsResult&gt;
+</code></pre>
+<h3 id="495-s3">4.9.5 创建S3用户</h3>
+<p>执行如下命令创建S3用户：</p>
+<pre><code>radosgw-admin user create --uid=&quot;s3user&quot; --display-name=&quot;s3user&quot;
+</code></pre>
+<p>命令输出：</p>
+<pre><code>{
+    &quot;user_id&quot;: &quot;s3user&quot;,
+    &quot;display_name&quot;: &quot;s3user&quot;,
+    &quot;email&quot;: &quot;&quot;,
+    &quot;suspended&quot;: 0,
+    &quot;max_buckets&quot;: 1000,
+    &quot;auid&quot;: 0,
+    &quot;subusers&quot;: [],
+    &quot;keys&quot;: [
+        {
+            &quot;user&quot;: &quot;s3user&quot;,
+            &quot;access_key&quot;: &quot;6FVWLPPC36VVD6NUUKMC&quot;,
+            &quot;secret_key&quot;: &quot;LPAW4ZrAq6Xv1rZYk5BFDM8NeIomB6pin6vI3wH6&quot;
+        }
+    ],
+    &quot;swift_keys&quot;: [],
+    &quot;caps&quot;: [],
+    &quot;op_mask&quot;: &quot;read, write, delete&quot;,
+    &quot;default_placement&quot;: &quot;&quot;,
+    &quot;placement_tags&quot;: [],
+    &quot;bucket_quota&quot;: {
+        &quot;enabled&quot;: false,
+        &quot;check_on_raw&quot;: false,
+        &quot;max_size&quot;: -1,
+        &quot;max_size_kb&quot;: 0,
+        &quot;max_objects&quot;: -1
+    },
+    &quot;user_quota&quot;: {
+        &quot;enabled&quot;: false,
+        &quot;check_on_raw&quot;: false,
+        &quot;max_size&quot;: -1,
+        &quot;max_size_kb&quot;: 0,
+        &quot;max_objects&quot;: -1
+    },
+    &quot;temp_url_keys&quot;: [],
+    &quot;type&quot;: &quot;rgw&quot;
+}
+</code></pre>
+<h3 id="496--swift-">4.9.6 创建 Swift 用户</h3>
+<p>执行如下命令创建swift用户：</p>
+<pre><code>radosgw-admin subuser create --uid=s3user --subuser=s3user:swift --access=full
+</code></pre>
+<p>命令输出：</p>
+<pre><code>{
+    &quot;user_id&quot;: &quot;s3user&quot;,
+    &quot;display_name&quot;: &quot;s3user&quot;,
+    &quot;email&quot;: &quot;&quot;,
+    &quot;suspended&quot;: 0,
+    &quot;max_buckets&quot;: 1000,
+    &quot;auid&quot;: 0,
+    &quot;subusers&quot;: [
+        {
+            &quot;id&quot;: &quot;s3user:swift&quot;,
+            &quot;permissions&quot;: &quot;full-control&quot;
+        }
+    ],
+    &quot;keys&quot;: [
+        {
+            &quot;user&quot;: &quot;s3user&quot;,
+            &quot;access_key&quot;: &quot;6FVWLPPC36VVD6NUUKMC&quot;,
+            &quot;secret_key&quot;: &quot;LPAW4ZrAq6Xv1rZYk5BFDM8NeIomB6pin6vI3wH6&quot;
+        }
+    ],
+    &quot;swift_keys&quot;: [
+        {
+            &quot;user&quot;: &quot;s3user:swift&quot;,
+            &quot;secret_key&quot;: &quot;geNZjsqcugmeqBvEWJ1dCL1vTJU6ti08UGI3W4Jl&quot;
+        }
+    ],
+    &quot;caps&quot;: [],
+    &quot;op_mask&quot;: &quot;read, write, delete&quot;,
+    &quot;default_placement&quot;: &quot;&quot;,
+    &quot;placement_tags&quot;: [],
+    &quot;bucket_quota&quot;: {
+        &quot;enabled&quot;: false,
+        &quot;check_on_raw&quot;: false,
+        &quot;max_size&quot;: -1,
+        &quot;max_size_kb&quot;: 0,
+        &quot;max_objects&quot;: -1
+    },
+    &quot;user_quota&quot;: {
+        &quot;enabled&quot;: false,
+        &quot;check_on_raw&quot;: false,
+        &quot;max_size&quot;: -1,
+        &quot;max_size_kb&quot;: 0,
+        &quot;max_objects&quot;: -1
+    },
+    &quot;temp_url_keys&quot;: [],
+    &quot;type&quot;: &quot;rgw&quot;
+}
+</code></pre>
+<h3 id="497-s3">4.9.7 测试S3接口</h3>
+<p>安装 python-boto库</p>
+<pre><code>yum install -y python-boto
+</code></pre>
+<p>创建测试脚本：s3test.py</p>
+<pre><code>cd /tmp
+cat &lt;&lt;EOF &gt; s3test.py
+#!/usr/bin/python  
+# -*- coding:utf-8 -*-  
+import boto.s3.connection  
+
+access_key = '6FVWLPPC36VVD6NUUKMC'     
+secret_key ='LPAW4ZrAq6Xv1rZYk5BFDM8NeIomB6pin6vI3wH6'  
+conn = boto.connect_s3(  
+        aws_access_key_id=access_key,  
+        aws_secret_access_key=secret_key,  
+        host='192.168.18.81',port=7480,  
+        is_secure=False,calling_format=boto.s3.connection.OrdinaryCallingFormat(),  
+        )  
+
+bucket = conn.create_bucket('my-new-bucket')  
+for bucket in conn.get_all_buckets():  
+    print&quot;{name} {created}&quot;.format(  
+            name=bucket.name,  
+            created=bucket.creation_date,  
+            )
+EOF
+</code></pre>
+<p>执行脚本测试S3接口：</p>
+<pre><code># python s3test.py
+my-new-bucket 2018-10-31T05:55:32.332Z
+</code></pre>
+<p>看到上面的返回结果表示接口测试成功。</p>
+<h3 id="498-swift">4.9.8 测试Swift接口</h3>
+<p>安装python-pip工具：</p>
+<pre><code>yum -y install epel-release
+yum -y install python-pip
+pip -V
+pip install --upgrade pip
+</code></pre>
+<p>安装相关的软件包：</p>
+<pre><code>cd /usr/local
+wget https://pypi.python.org/packages/6f/10/5398a054e63ce97921913052fde13ebf332a3a4104c50c4d7be9c465930e/setuptools-26.1.1.zip#md5=f81d3cc109b57b715d46d971737336db
+yum -y install unzip 
+unzip setuptools-26.1.1.zip
+cd setuptools-26.1.1
+python setup.py install
+pip install python-swiftclient
+cd .. &amp;&amp; rm -fr setuptools-26.1.1*
+</code></pre>
+<p>命令行访问测试，命令行测试的格式如下：</p>
+<pre><code>swift -A http://{ip}:{port}/auth/1.0 -U{swiftuser}:swift -K '{swift_secret_key}' list
+</code></pre>
+<p>本例的测试过程及结果如下：</p>
+<pre><code># swift -A http://192.168.18.81:7480/auth/1.0 -Us3user:swift -K 'geNZjsqcugmeqBvEWJ1dCL1vTJU6ti08UGI3W4Jl' list
+my-new-bucket
+</code></pre>
+<p>删除之前创建的<code>my-new-bucket</code>：</p>
+<pre><code># swift -A http://192.168.18.81:7480/auth/1.0 -Us3user:swift -K 'geNZjsqcugmeqBvEWJ1dCL1vTJU6ti08UGI3W4Jl' delete my-new-bucket
+my-new-bucket
+
+# swift -A http://192.168.18.81:7480/auth/1.0 -Us3user:swift -K 'geNZjsqcugmeqBvEWJ1dCL1vTJU6ti08UGI3W4Jl' list
+</code></pre>
+<h2 id="410-dashboard">4.10 部署dashboard</h2>
+<p>新版本的CEPH软件提供了一个Dashboard监控界面，其部署方式比较简单，如下所示：</p>
+<pre><code>su - cephuser
+cd ~/ceph-deploy
+ceph auth get-or-create mgr.ceph-n81 mon 'allow profile mgr' osd 'allow *' mds 'allow *'
+ceph-mgr -i ceph-n81
+ceph mgr module enable dashboard
+ceph config-key set mgr/dashboard/ceph-n81/server_addr 192.168.18.81
+ceph status
+</code></pre>
+<p>打开浏览器访问：<a href="http://192.168.18.81:7000/">http://192.168.18.81:7000/</a>即可。</p>
+<h1 id="5-ceph">5 Ceph集群维护</h1>
+<h2 id="51-">5.1 集群体检</h2>
+<h3 id="511-">5.1.1 检查集群状态</h3>
+<pre><code>ceph -s
+ceph status
+</code></pre>
+<h3 id="512-">5.1.2 实时观察集群健康状况</h3>
+<pre><code>ceph -w
+</code></pre>
+<h3 id="513-ceph-monitor">5.1.3 检查Ceph monitor仲裁状态</h3>
+<pre><code>ceph quorum_status --format json-pretty
+</code></pre>
+<h3 id="514-ceph-monitor">5.1.4 导出Ceph monitor信息</h3>
+<pre><code>ceph mon dump
+</code></pre>
+<h3 id="515-">5.1.5 检查集群使用状态</h3>
+<pre><code>ceph df
+ceph df detail
+rados df
+</code></pre>
+<h3 id="516-ceph-monitor">5.1.6 检查Ceph monitor状态</h3>
+<pre><code>ceph mon stat
+</code></pre>
+<h3 id="517-osd">5.1.7 检查OSD状态</h3>
+<pre><code>ceph osd stat
+</code></pre>
+<h3 id="518-pg">5.1.8 检查PG状态</h3>
+<pre><code>ceph pg stat
+</code></pre>
+<h3 id="519-pg">5.1.9 查看PG列表</h3>
+<pre><code>ceph pg dump
+</code></pre>
+<h3 id="5110-ceph">5.1.10 查看Ceph存储池列表</h3>
+<pre><code>ceph osd lspools
+</code></pre>
+<h3 id="5111-osdcrush-map">5.1.11 检查OSD的Crush map</h3>
+<pre><code>ceph osd tree
+</code></pre>
+<h3 id="5112-">5.1.12 查看集群的认证密钥</h3>
+<pre><code>ceph auth list
+</code></pre>
+<h3 id="5113-">5.1.13 查看集群节点</h3>
+<pre><code>ceph node ls {all|osd|mon|mds}      #请指定节点类型
+</code></pre>
+<h3 id="5114-osd">5.1.14 查看节点的osd磁盘</h3>
+<pre><code>ceph-deploy disk list ceph-n81 ceph-n82 ceph-n83 ceph-n84 ceph-n85
+</code></pre>
+<h1 id="6-">6 附录</h1>
+<h2 id="61-mon">6.1 mon状态不正常</h2>
+<p>集群Mon节点丢失：</p>
+<pre><code>health: HEALTH_WARN
+    1/3 mons down, quorum node81,node82
+
+services:
+    mon: 3 daemons, quorum node81,node82, out of quorum: node83
+    mgr: node81(active), standbys: node82, node83
+    mds: ceph_fs-1/1/1 up  {0=node81=up:active}
+    osd: 12 osds: 12 up, 12 in
+    rgw: 1 daemon active
+</code></pre>
+<p>重新部署该Mon节点：</p>
+<pre><code>su - cephuser
+cd ~/ceph-deploy/
+ceph-deploy mon destroy node83
+ceph-deploy mon add node83
+</code></pre>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉 </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/install-ceph-luminous/>https://guobo507.github.io/2020/install-ceph-luminous/</span>
+            </p>
+            
+             
+            <p class="copyright-item lincese">
+                本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2019/install-brew-on-macos/" class="prev" rel="prev" title="墙内的我们怎样在自己的MacOS上快速安装brew工具？"><i class="iconfont icon-left"></i>&nbsp;墙内的我们怎样在自己的MacOS上快速安装brew工具？</a>
+         
+        
+        <a href="https://guobo507.github.io/2020/deploy-private-docker-registry/" class="next" rel="next" title="怎样在CentOS 7上部署自己的私有Docker镜像仓库？">怎样在CentOS 7上部署自己的私有Docker镜像仓库？&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/" />
+  <link rel="next" href="https://guobo507.github.io/2020/basic-tuning-of-checkpoint/" />
+  <link rel="canonical" href="https://guobo507.github.io/2020/build-your-own-pg-rpms/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包 | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包 | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包",
+    "headline" : "Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包",
+    "description" : "PGDG 中提供了针对多个系统版本都提供了多个版本的 PostgreSQL 的 RPM 安装包，在生产中使用PGDG安装PostgreSQL数据库软件包是非常方便的途径。\n在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本？如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包？\n编译和安装PostgreSQL 本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 进行安装，但本文的目的在于演示整个操作的过程。我将以安装PG 12.1版本为例说明。\n首先，我的系统环境如下：\n[root@pgbuild ~]# cat \/etc\/centos-release CentOS Linux release 7.6.1810 (Core) [root@pgbuild ~]# uname -a Linux pgbuild 3.10.0-957.5.1.el7.x86_64 #1 SMP Fri Feb 1 14:54:57 UTC 2019 x86_64 x86_64 x86_64 GNU\/Linux  根据需要，我设置我的语言环境为我比较习惯的英文环境：\nexport LANG=en_US.UTF-8  从操作系统光盘或者在线的系统仓库安装如下的必须的编译所需软件包：\nyum install -y make # VERSION \x26gt;= 3.80 yum install -y gcc # Recent versions of GCC are recommended.",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉",
+    "creator" : "肉啃肉",
+    "publisher": "肉啃肉",
+    "accountablePerson" : "肉啃肉",
+    "copyrightHolder" : "肉啃肉",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-10 11:33:52 \x2b0800 CST",
+    "dateModified" : "2020-01-10 11:33:52 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/build-your-own-pg-rpms\/",
+    "wordCount" : "1278",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-10 itemprop="datePublished">January 10, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>PGDG 中提供了针对多个系统版本都提供了多个版本的 PostgreSQL 的 RPM 安装包，在生产中使用PGDG安装PostgreSQL数据库软件包是非常方便的途径。</p>
+<p>在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本？如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包？</p>
+<h1 id="postgresql">编译和安装PostgreSQL</h1>
+<p>本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 进行安装，但本文的目的在于演示整个操作的过程。我将以安装PG 12.1版本为例说明。</p>
+<p>首先，我的系统环境如下：</p>
+<pre><code>[root@pgbuild ~]# cat /etc/centos-release
+CentOS Linux release 7.6.1810 (Core)
+
+[root@pgbuild ~]# uname -a
+Linux pgbuild 3.10.0-957.5.1.el7.x86_64 #1 SMP Fri Feb 1 14:54:57 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+</code></pre>
+<p>根据需要，我设置我的语言环境为我比较习惯的英文环境：</p>
+<pre><code>export LANG=en_US.UTF-8
+</code></pre>
+<p>从操作系统光盘或者在线的系统仓库安装如下的必须的编译所需软件包：</p>
+<pre><code>yum install -y make     # VERSION &gt;= 3.80
+yum install -y gcc      # Recent versions of GCC are recommended.
+yum install -y tar gzip bzip2       # The GNU Readline library is used by default.
+yum install -y readline readline-static
+yum install -y zlib zlib-static     # The zlib compression library is used by default.
+</code></pre>
+<p>下面的安装包是可选的，在默认配置的情况下不需要下面这些安装包。请根据下面的描述和实际需要进行安装：</p>
+<pre><code>yum install -y perl perl-libs perl-ExtUtils-Embed perl-ExtUtils-MakeMaker    # VERSION &gt;= 5.8.3
+perl -V |grep usemultiplicity
+yum install -y python python-libs python-devel   # VERSION &gt;= 2.4, Or Python3 3.1 or later.
+yum install -y tcl tcl-devel       # VERSION &gt;= 8.4
+yum install -y nls
+yum install -y openssl openssl-static       # VERSION &gt;= 0.9.8
+yum install -y docbook-dtds docbook-style-xsl fop libxslt
+yum install -y pam pam-devel
+
+# You need Kerberos, OpenLDAP, and/or PAM, if you want to support authentication using those services.
+yum install -y krb5-devel krb5-libs krb5-server pam_krb5
+</code></pre>
+<p>为了让 PostgreSQL 支持 LLVMJIT 即时编译，我们还需要安装 llvm-config（3.9及以上版本） 和clang（与llvm-config相匹配版本）：</p>
+<pre><code>cat &lt;&lt; EOF &gt; /etc/yum.repos.d/c7-devtoolset-7-x86_64.repo
+[c7-devtoolset-7]
+name=c7-devtoolset-7
+baseurl=https://buildlogs.centos.org/c7-devtoolset-7.x86_64/
+gpgcheck=0
+enabled=1
+
+[c7-llvm-toolset-7]
+name=c7-llvm-toolset-7
+baseurl=https://buildlogs.centos.org/c7-llvm-toolset-7.x86_64/
+gpgcheck=0
+enabled=1
+
+[fedoraproject-epel-7]
+name=fedoraproject-epel-7
+baseurl=https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/
+gpgcheck=0
+enabled=1
+EOF
+
+yum install -y llvm5.0-devel llvm-toolset-7-clang
+</code></pre>
+<p>我的实例中安装的clang和llvm都是5.0版本，如下所示：</p>
+<pre><code>[root@pgbuild ~]# rpm -qa |grep llvm |sort
+llvm5.0-5.0.1-7.el7.x86_64
+llvm5.0-devel-5.0.1-7.el7.x86_64
+llvm5.0-libs-5.0.1-7.el7.x86_64
+llvm-toolset-7-clang-5.0.1-4.el7.x86_64
+llvm-toolset-7-clang-libs-5.0.1-4.el7.x86_64
+llvm-toolset-7-compiler-rt-5.0.1-2.el7.x86_64
+llvm-toolset-7-libomp-5.0.1-2.el7.x86_64
+llvm-toolset-7-llvm-libs-5.0.1-8.el7.x86_64
+llvm-toolset-7-runtime-5.0.1-4.el7.x86_64
+</code></pre>
+<p>这些软件包装完后，主要涉及如下的三个目录：</p>
+<ul>
+<li><code>/usr/lib64/llvm5.0/</code>: 提供<code>llvm-config</code>工具；</li>
+<li><code>/opt/rh/devtoolset-7/root/</code>: 在编译阶段，为编译工具提供<code>g++</code>命令（系统提供的g++命令版本过低，不符合要求）；</li>
+<li><code>/opt/rh/llvm-toolset-7/root/</code>: 在编译阶段，为编译工具提供<code>clang</code>命令；</li>
+</ul>
+<p>接下来就是编译安装 PostgreSQL 软件了。你至少需要有 100MB 的空间用于源代码编译，以及 20MB 空间用于安装文件。一个空的数据库集群大约需要 35MB 的存储空间，但通常需要 5 倍该数量的空间以确保数据库正常运行。</p>
+<p>下面的这些包也是编译必须的：</p>
+<pre><code>yum install -y libxslt libxslt-devel
+yum install -y libxml2 libxml2-devel
+yum install -y systemd-devel
+yum install -y rpm-build
+</code></pre>
+<p>创建一个操作系统用户用于运行和管理 PostgreSQL 数据库：</p>
+<pre><code>groupadd -g 5432 yhpg
+useradd -u 5432 -g yhpg -s /usr/bin/bash -m yhpg
+echo 123456 |passwd --stdin yhpg
+</code></pre>
+<p>你可能需要提前到官方网站下载好源代码包，例如：<a href="https://download.postgresql.org/pub/source/">https://download.postgresql.org/pub/source/</a>，本例中我们已经提前下载好了。</p>
+<p>执行下面的编译过程：</p>
+<pre><code>su - yhpg
+BASEDIR=/home/yhpg
+VERSION=postgresql-11.5
+PREFIX=/usr/pgsql-11
+
+cd $BASEDIR
+wget http://192.168.18.3/tools/postgresql/pg_source/$VERSION.tar.bz2
+tar -xjf $VERSION.tar.bz2
+
+mkdir -p ./$VERSION/build_dir
+cd ./$VERSION/build_dir
+
+export PATH=/opt/rh/llvm-toolset-7/root/usr/bin:/opt/rh/devtoolset-7/root/usr/bin:$PATH
+$BASEDIR/$VERSION/configure \
+--prefix=$PREFIX \
+--bindir=$PREFIX/bin \
+--sysconfdir=$PREFIX/etc \
+--includedir=$PREFIX/include \
+--datarootdir=$PREFIX/share \
+--enable-nls='en zh' \
+--with-pgport=5432 \
+--with-systemd \
+--with-openssl \
+--with-perl \
+--with-python \
+--with-tcl \
+--with-libxml \
+--with-libxslt \
+--with-llvm \
+--with-pam \
+--with-systemd \
+--with-llvm LLVM_CONFIG='/usr/lib64/llvm5.0/bin/llvm-config'
+
+make -j 8 all
+</code></pre>
+<p><code>make</code>命令执行完后，你可以看到如下的输出：</p>
+<pre><code>......
+make[2]: Leaving directory `/home/yhpg/postgresql-11.5/build_dir/src/backend/jit/llvm'
+make[1]: Leaving directory `/home/yhpg/postgresql-11.5/build_dir/src'
+All of PostgreSQL successfully made. Ready to install.
+</code></pre>
+<p>接下来，你可以直接将编译好的 PostgreSQL 安装到服务器上，可以参考如下的命令来将PostgreSQL安装到服务器上。由于我们使用普通用户yhpg进行编译，但是安装目录为<code>/usr/pgsql-11</code>，默认该用户没有权限，因此我们先用root用户创建该目录，并设置正确的权限：</p>
+<pre><code>su - root
+mkdir /usr/pgsql-11
+chown -R yhpg:yhpg /usr/pgsql-11
+chmod 755 /usr/pgsql-11
+</code></pre>
+<p>然后，在使用yhpg用户执行安装：</p>
+<pre><code>su - yhpg
+cd /home/yhpg/postgresql-11.5/build_dir
+make install-world
+</code></pre>
+<p>安装完成后，你会看到类似如下的输出：</p>
+<pre><code>......
+make[2]: Leaving directory `/home/yhpg/postgresql-11.5/build_dir/contrib/ltree_plpython'
+make[1]: Leaving directory `/home/yhpg/postgresql-11.5/build_dir/contrib'
+PostgreSQL, contrib, and documentation installation complete.
+</code></pre>
+<p>检查一下安装目录：</p>
+<pre><code>[yhpg@pgbuild build_dir]$ cd /usr/pgsql-11
+[yhpg@pgbuild pgsql-11]$ ls -l
+total 20
+drwxrwxr-x 2 yhpg yhpg 4096 Jan 16 09:16 bin
+drwxrwxr-x 6 yhpg yhpg 4096 Jan 16 09:16 include
+drwxrwxr-x 5 yhpg yhpg 4096 Jan 16 09:16 lib
+drwxrwxr-x 8 yhpg yhpg 4096 Jan 16 09:16 share
+
+[yhpg@pgbuild pgsql-11]$ du -hs ./*
+12M	./bin
+5.8M	./include
+28M	./lib
+22M	./share
+
+[yhpg@pgbuild pgsql-11]$ ls -l ./bin
+total 11892
+-rwxr-xr-x 1 yhpg yhpg   63880 Jan 16 09:16 clusterdb
+-rwxr-xr-x 1 yhpg yhpg   63664 Jan 16 09:16 createdb
+-rwxr-xr-x 1 yhpg yhpg   68472 Jan 16 09:16 createuser
+-rwxr-xr-x 1 yhpg yhpg   59040 Jan 16 09:16 dropdb
+-rwxr-xr-x 1 yhpg yhpg   59008 Jan 16 09:16 dropuser
+-rwxr-xr-x 1 yhpg yhpg  933744 Jan 16 09:16 ecpg
+-rwxr-xr-x 1 yhpg yhpg  136728 Jan 16 09:16 initdb
+-rwxr-xr-x 1 yhpg yhpg   33808 Jan 16 09:16 oid2name
+-rwxr-xr-x 1 yhpg yhpg   30424 Jan 16 09:16 pg_archivecleanup
+-rwxr-xr-x 1 yhpg yhpg  120616 Jan 16 09:16 pg_basebackup
+-rwxr-xr-x 1 yhpg yhpg  154464 Jan 16 09:16 pgbench
+-rwxr-xr-x 1 yhpg yhpg   33936 Jan 16 09:16 pg_config
+-rwxr-xr-x 1 yhpg yhpg   46984 Jan 16 09:16 pg_controldata
+-rwxr-xr-x 1 yhpg yhpg   58160 Jan 16 09:16 pg_ctl
+-rwxr-xr-x 1 yhpg yhpg  413112 Jan 16 09:16 pg_dump
+-rwxr-xr-x 1 yhpg yhpg   94896 Jan 16 09:16 pg_dumpall
+-rwxr-xr-x 1 yhpg yhpg   63152 Jan 16 09:16 pg_isready
+-rwxr-xr-x 1 yhpg yhpg   79248 Jan 16 09:16 pg_receivewal
+-rwxr-xr-x 1 yhpg yhpg   84128 Jan 16 09:16 pg_recvlogical
+-rwxr-xr-x 1 yhpg yhpg   57272 Jan 16 09:16 pg_resetwal
+-rwxr-xr-x 1 yhpg yhpg  173968 Jan 16 09:16 pg_restore
+-rwxr-xr-x 1 yhpg yhpg   91440 Jan 16 09:16 pg_rewind
+-rwxr-xr-x 1 yhpg yhpg   30360 Jan 16 09:16 pg_standby
+-rwxr-xr-x 1 yhpg yhpg   35344 Jan 16 09:16 pg_test_fsync
+-rwxr-xr-x 1 yhpg yhpg   30136 Jan 16 09:16 pg_test_timing
+-rwxr-xr-x 1 yhpg yhpg  134608 Jan 16 09:16 pg_upgrade
+-rwxr-xr-x 1 yhpg yhpg   43584 Jan 16 09:16 pg_verify_checksums
+-rwxr-xr-x 1 yhpg yhpg   90200 Jan 16 09:16 pg_waldump
+-rwxr-xr-x 1 yhpg yhpg 8013104 Jan 16 09:16 postgres
+lrwxrwxrwx 1 yhpg yhpg       8 Jan 16 09:16 postmaster -&gt; postgres
+-rwxr-xr-x 1 yhpg yhpg  640400 Jan 16 09:16 psql
+-rwxr-xr-x 1 yhpg yhpg   68072 Jan 16 09:16 reindexdb
+-rwxr-xr-x 1 yhpg yhpg   72760 Jan 16 09:16 vacuumdb
+-rwxr-xr-x 1 yhpg yhpg   29688 Jan 16 09:16 vacuumlo
+
+[yhpg@pgbuild pgsql-11]$ ls -l ./share/extension/
+total 1304
+-rw-r--r-- 1 yhpg yhpg   274 Jan 16 09:16 adminpack--1.0--1.1.sql
+-rw-r--r-- 1 yhpg yhpg  1535 Jan 16 09:16 adminpack--1.0.sql
+-rw-r--r-- 1 yhpg yhpg  1682 Jan 16 09:16 adminpack--1.1--2.0.sql
+-rw-r--r-- 1 yhpg yhpg   176 Jan 16 09:16 adminpack.control
+-rw-r--r-- 1 yhpg yhpg   931 Jan 16 09:16 amcheck--1.0--1.1.sql
+-rw-r--r-- 1 yhpg yhpg   704 Jan 16 09:16 amcheck--1.0.sql
+-rw-r--r-- 1 yhpg yhpg   154 Jan 16 09:16 amcheck.control
+-rw-r--r-- 1 yhpg yhpg   249 Jan 16 09:16 autoinc--1.0.sql
+-rw-r--r-- 1 yhpg yhpg   149 Jan 16 09:16 autoinc.control
+-rw-r--r-- 1 yhpg yhpg   250 Jan 16 09:16 autoinc--unpackaged--1.0.sql
+-rw-r--r-- 1 yhpg yhpg   666 Jan 16 09:16 bloom--1.0.sql
+-rw-r--r-- 1 yhpg yhpg   156 Jan 16 09:16 bloom.control
+-rw-r--r-- 1 yhpg yhpg  1372 Jan 16 09:16 btree_gin--1.0--1.1.sql
+-rw-r--r-- 1 yhpg yhpg 24818 Jan 16 09:16 btree_gin--1.0.sql
+-rw-r--r-- 1 yhpg yhpg  1445 Jan 16 09:16 btree_gin--1.1--1.2.sql
+-rw-r--r-- 1 yhpg yhpg  4571 Jan 16 09:16 btree_gin--1.2--1.3.sql
+......
+</code></pre>
+<p>使用yhpg用户，执行下面的命令创建一个数据库集群实例来测试一下安装的结果：</p>
+<pre><code>su - yhpg
+export PGHOME=/usr/pgsql-11
+export PGDATA=/home/yhpg/data
+export PATH=$PGHOME/bin:$PATH
+mkdir -p $PGDATA
+chmod 700 $PGDATA
+echo 1qaz2wsx &gt; /tmp/.super_password
+initdb --username=yhpg --pgdata=$PGDATA --auth=trust --encoding=UTF-8 --locale=C --pwfile=/tmp/.super_password
+rm -f /tmp/.super_password
+
+pg_ctl -D $PGDATA -l $PGDATA/postgresql.log start
+</code></pre>
+<p>查看后台进程：</p>
+<pre><code>[yhpg@pgbuild ~]$ ps -ef |grep postgres
+yhpg      4222     1  0 09:21 pts/1    00:00:00 /usr/pgsql-11/bin/postgres -D /home/yhpg/data
+yhpg      4224  4222  0 09:21 ?        00:00:00 postgres: checkpointer
+yhpg      4225  4222  0 09:21 ?        00:00:00 postgres: background writer
+yhpg      4226  4222  0 09:21 ?        00:00:00 postgres: walwriter
+yhpg      4227  4222  0 09:21 ?        00:00:00 postgres: autovacuum launcher
+yhpg      4228  4222  0 09:21 ?        00:00:00 postgres: stats collector
+yhpg      4229  4222  0 09:21 ?        00:00:00 postgres: logical replication launcher
+yhpg      4234  4043  0 09:21 pts/1    00:00:00 grep --color=auto postgres
+</code></pre>
+<p>创建一个测试数据库，并尝试安装插件：</p>
+<pre><code>[yhpg@pgbuild ~]$ createdb test
+[yhpg@pgbuild ~]$ psql test -c 'create extension pg_stat_statements;'
+CREATE EXTENSION
+[yhpg@pgbuild ~]$ psql test -c '\list'
+                        List of databases
+Name    | Owner | Encoding | Collate | Ctype | Access privileges
+-----------+-------+----------+---------+-------+-------------------
+postgres  | yhpg  | UTF8     | C       | C     |
+template0 | yhpg  | UTF8     | C       | C     | =c/yhpg          +
+        |       |          |         |       | yhpg=CTc/yhpg
+template1 | yhpg  | UTF8     | C       | C     | =c/yhpg          +
+        |       |          |         |       | yhpg=CTc/yhpg
+test      | yhpg  | UTF8     | C       | C     |
+(4 rows)
+
+[yhpg@pgbuild ~]$ psql test -c '\dx'
+                                    List of installed extensions
+        Name        | Version |   Schema   |                        Description
+--------------------+---------+------------+-----------------------------------------------------------
+pg_stat_statements | 1.6     | public     | track execution statistics of all SQL statements executed
+plpgsql            | 1.0     | pg_catalog | PL/pgSQL procedural language
+(2 rows)
+</code></pre>
+<p>停止该数据库实例可以使用下面的命令：</p>
+<pre><code>pg_ctl -D $PGDATA -l $PGDATA/postgresql.log -m fast stop
+</code></pre>
+<p>到这里，你已经成功在CentOS 7上编译和安装了 PostgreSQL 软件，并运行了一个数据库实例。</p>
+<h1 id="postgresql-rpm">创建PostgreSQL RPM安装包</h1>
+<p>从这里开始，我会展示如何创建 PostgreSQL 的 RPM 软件包。</p>
+<p>这里我们要用到一个项目<code>dennis-apter/pgrpms</code>，可以从Github上找到该项目。实际过程中你需要现将该项目克隆到服务器上，具体的步骤及命令这省略了。我的环境中，我已经提前下载好了该项目的源码包；因此，我们就直接开始吧：</p>
+<pre><code>su - yhpg
+cd /home/yhpg
+wget http://192.168.18.3/tools/postgresql/pg_source/pgrpms.tar.gz
+tar -xzf pgrpms.tar.gz
+
+mkdir -p -v ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+
+cp ~/pgrpms/rpm/redhat/11/postgresql/EL-7/* ~/rpmbuild/SOURCES/
+cd ~/rpmbuild/SOURCES/
+sed -i &quot;2 a%global pgmajorversion 11&quot; postgresql-11.spec
+
+wget http://192.168.18.3/tools/postgresql/pg_source/postgresql-11.5.tar.bz2
+wget http://192.168.18.3/tools/postgresql/pg_source/postgresql-11-A4.pdf
+
+rpmbuild -bb postgresql-11.spec
+</code></pre>
+<p>执行完成后你可以在<code>~/rpmbuild/RPMS/</code>目录中找到生成的RPM包：</p>
+<pre><code>cd ~/rpmbuild/RPMS/x86_64/
+ls -l
+</code></pre>
+<p>参照上面的步骤，你就可以在服务器上生成任意版本的PostgreSQL的RPM安装包了。</p>
+<p>如果你有其他需求，可以根据需要拷贝合适的文件至<code>~/rpmbuild/SOURCES/</code>下，并进行深度定制。这里我已经根据我们的实际需要，定制好了一个在Linux 7上生成PostgreSQL 12的软件包的项目，地址是：<a href="https://github.com/guobo507/yhpg-12-rpmbuild/">https://github.com/guobo507/yhpg-12-rpmbuild/</a>，你可以参考该项目进行RPM打包。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉 </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/build-your-own-pg-rpms/>https://guobo507.github.io/2020/build-your-own-pg-rpms/</span>
+            </p>
+            
+             
+            <p class="copyright-item lincese">
+                本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/" class="prev" rel="prev" title="用pgbadger工具分析PostgreSQL的系统日志（生成html报告）"><i class="iconfont icon-left"></i>&nbsp;用pgbadger工具分析PostgreSQL的系统日志（生成html报告）</a>
+         
+        
+        <a href="https://guobo507.github.io/2020/basic-tuning-of-checkpoint/" class="next" rel="next" title="PG中调整checkpoint相关参数的基本原则【译】">PG中调整checkpoint相关参数的基本原则【译】&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

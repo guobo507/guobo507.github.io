@@ -1,34 +1,140 @@
 <!DOCTYPE html>
-<html lang="en-us"><head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>PG中调整checkpoint相关参数的基本原则【译】 - TheRealGuobo</title>
-    <base href="https://guobo507.github.io/">
-    <link rel="stylesheet" href="https://guobo507.github.io/css/styles.css">
-    <link rel="stylesheet" href="https://guobo507.github.io/css/font.css">
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉er">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2020/build-your-own-pg-rpms/" />
+  <link rel="next" href="https://guobo507.github.io/2020/the-point-of-pgbouncer/" />
+  <link rel="canonical" href="https://guobo507.github.io/2020/basic-tuning-of-checkpoint/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           PG中调整checkpoint相关参数的基本原则【译】 | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="PG中调整checkpoint相关参数的基本原则【译】 | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "PG中调整checkpoint相关参数的基本原则【译】",
+    "headline" : "PG中调整checkpoint相关参数的基本原则【译】",
+    "description" : "原文链接：https:\/\/www.2ndquadrant.com\/en\/blog\/basics-of-tuning-checkpoints\/。译者水平有限，不当之处请多包涵。\n 在具有一定规模的写入（non-trivial number of writes）的系统上，合适的检查点参数设置对于获得良好的系统性能至关重要。然而，检查点是我们经常在社区邮件列表，以及在为客户进行性能调整审查时，发现设置混乱和配置有问题的区域之一（另一个区域是不久前Citus公司的Joe Nelson曾经讨论过的autovacuum）。因此，我将引导您理解和完成检查点的设置，包括检查点的作用以及如何在PostgreSQL中进行合适的调整。\nWhat is the point of checkpoints? PostgreSQL是依赖预写日志（WAL）的数据库之一，所有的更改都要首先写入WAL日志（关于数据库更改的流式信息），然后才写入到数据文件中。这样可以提供数据的持久性，因为在发生崩溃的情况下，数据库可以使用WAL日志执行恢复，即从WAL日志中读取数据库的更改，然后将其重新应用到数据库中。\n虽然这可能使实际的写入量增加一倍，但是可以提高数据库整体的性能。用户只需要等待WAL日志刷新到磁盘，而数据文件页仅在内存中被修改，然后稍后在后台刷新到磁盘。这样做很值得，因为对WAL日志本质上是顺序写入的，而对数据文件的写入通常是随机的（因为缓存在内存中的数据页是随机的）。\n假设系统崩溃了，数据库需要执行恢复。最简单的方法是从头开始，并从头开始重放所有的WAL日志。最后，我们就能获得完整的（正确的）数据库。这样做有一个明显的缺点，需要保留并在恢复时重放所有的WAL日志。我们经常处理规模不大的数据库（例如几百GB），但是每天会产生几TB的WAL日志（变更多）。因此，想象一下当数据库运行了一年以后，需要多少磁盘空间来保存所有WAL日志，以及在恢复过程中重放所有WAL日志需要多少时间。\n但是，如果数据库可以保证给定WAL位置（日志中的偏移量）的所有更改，以及直到该位置的所有数据文件的更改都已经刷新到磁盘。那么，数据库在恢复时就可以确定需要恢复的起始位置，并仅仅重放WAL日志的其余部分即可，从而将大大减少恢复的时间。而且数据库还可以删除该“已知良好（known good）”位置之前的WAL文件。\n这正是检查点的目的：确保在执行数据库恢复时不再需要某个时间点之前的WAL日志，从而减少了磁盘空间需求和恢复的时间。\n注意：如果您碰巧是一名游戏玩家，则您可能更加熟悉检查点的概念。如您的角色在游戏中通过了某个点，并且如果您没能击败下一个BOSS或掉进了熔岩中；则您只需要从您已经通过的最后一关重新开始即可，而不是从游戏的开头重新开始。让我们看看在PostgreSQL中是如何实现这一点的。\n我们再讨论另一个比较极端的例子：非常频繁地执行检查点操作（例如，每秒进行一次）。这杨的结果是将只保留非常少量的WAL日志，恢复速度也非常快（只需重放很少量的WAL日志）。但这也会把对数据文件的异步写入转换为类似同步写入（频率高），从而严重影响用户体验（例如，增加COMMIT的延迟，降低系统的吞吐量）。\n因此，在实践中，您可能希望检查点不经常发生而不影响用户，但是也要足够频繁，以合理限制恢复时间和对磁盘空间的需求。\nTriggering checkpoints 可以触发检查点的原因大约有三四种：\n 直接执行CHECKPOINT命令； 执行需要的检查点的命令（例如：pg_start_backup，CREATE DATABASE，或pg_ctl stop|restart和其他一些命令）； 自上一个检查点以来已达到配置的时间； 自上一个检查点以来生成了已配置的最大WAL文件数量（也称为WAL用尽（running out of WAL）或填充WAL（filling WAL））。  前两条在数据库日常运行中是无关紧要的，很少见的，因为都是必要时才会手动触发的事件。这篇文章是关于如何配置另外两个数据库自动执行的检查点事件的，这些事件会影响定期执行的检查点。\n另外两条基于时间（time）\/大小（size）的限制通过如下两个配置参数来实现：\n checkpoint_timeout = 5min max_wal_size = 1GB (before PostgreSQL 9.5 this was checkpoint_segments)  使用上面的（默认）值，PostgreSQL将在每5分钟，或者在磁盘上的WAL日志文件总量增长到大约1GB之后触发CHECKPOINT操作。\n注意：max_wal_size是总WAL日志文件的大小，它是一个软限制（soft limit），有两个意义。首先，数据库将尝试不超过该限制，但超过它是可以的，因此请在分区文件系统上配置足够的可用空间并对其进行监控。其次，这并不是针对“每个检查点”的限制，由于检查点是分散的（稍后说明），WAL日志的配额会在2-3个检查点之间分配。因此，数据库通常在写入了300–500MB的WAL文件之后自动启动CHECKPOINT操作，具体还要依赖于您的checkpoint_completion_target设置。\n与模版配置文件中的大多数其他参数的默认值一样，默认值也很低，其大小设置可以在Raspberry Pi等小型系统上良好的工作。\n但是，如何来确定您的系统中的一个合适的参数值呢？我们的目标是不要太频繁也不要很少执行检查点操作。关于这两个参数的设置的“最佳实践”包括下面的两个步骤：\n 设置一个合理的checkpoint_timeout值； 将max_wal_size设置得足够高以至于很少能达到。  实际上很难说一个“合理”的checkpoint_timeout值是多少，因为它取决于恢复时间目标（RTO），即可接受的最大恢复持续时间是多少。\n这有点棘手，因为checkpoint_timeout它限制了生成WAL日志所花费的时间，而不是直接影响到恢复的时间。由于多种原因，我们无法确切地说出恢复需要话费多长时间。WAL日志通常是由多个进程（运行DML）生成的，而恢复时则是由单个进程执行的（此限制主要是固有的，不太可能很快改变）。这不仅影响本地恢复，还会影响到具有流复制的备用数据库的故障转移恢复。当然，本地恢复通常是在重新启动后立即进行的，此时文件系统缓存很冷（cold）。\n通常，默认值（5分钟）比较低，设置30分钟到1小时之间的值是比较常见的。PostgreSQL 9.6甚至将最长期限增加到1天（因此，一些黑客认为这对于某些用例是个好主意）。较低的值也可能由于全页写入而导致写入放大（在此不做讨论）。\n假设我们决定使用30分钟：\ncheckpoint_timeout = 30min  现在我们需要评估在30分钟内数据库将产生多少WAL日志文件，以便我们可以将其用于max_wal_size设置。有几种方法可以确定生成多少WAL日志文件：",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉er",
+    "creator" : "肉啃肉er",
+    "publisher": "肉啃肉er",
+    "accountablePerson" : "肉啃肉er",
+    "copyrightHolder" : "肉啃肉er",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-12 16:24:41 \x2b0800 CST",
+    "dateModified" : "2020-01-12 16:24:41 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/basic-tuning-of-checkpoint\/",
+    "wordCount" : "234",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
 </head>
-<body><header>
-    <nav class="breadcrumb grape">
-	<h4><a href="/">TheRealGuobo</a></h4>
-	<div id="space"></div>
-        
-        <a href="/posts/">Posts</a>
-        
-        <a href="/about/">About Hugo</a>
-        
-    </nav>
-</header>
 
-<main id="single">
-    <div id="post" class="white">
-	<div class="container">
-	    <div id="title">
-                <h1>PG中调整checkpoint相关参数的基本原则【译】</h1>
-                <time datetime="2020-01-12T16:24:41&#43;0800">2020-01-12</time>
+  
 
-	    </div>
-            <section class="post-content">
-                <blockquote>
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">PG中调整checkpoint相关参数的基本原则【译】</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉er</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-12 itemprop="datePublished">January 12, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <blockquote>
 <p>原文链接：<a href="https://www.2ndquadrant.com/en/blog/basics-of-tuning-checkpoints/">https://www.2ndquadrant.com/en/blog/basics-of-tuning-checkpoints/</a>。译者水平有限，不当之处请多包涵。</p>
 </blockquote>
 <p>在具有一定规模的写入（non-trivial number of writes）的系统上，合适的检查点参数设置对于获得良好的系统性能至关重要。然而，检查点是我们经常在社区邮件列表，以及在为客户进行性能调整审查时，发现设置混乱和配置有问题的区域之一（另一个区域是不久前Citus公司的<a href="https://www.citusdata.com/blog/2016/11/04/autovacuum-not-the-enemy/">Joe Nelson</a>曾经讨论过的<code>autovacuum</code>）。因此，我将引导您理解和完成检查点的设置，包括检查点的作用以及如何在PostgreSQL中进行合适的调整。</p>
@@ -146,15 +252,88 @@ pg_xlog_location_diff
 </ul>
 <p>或者，您可以简单地使用我们的<a href="https://www.2ndquadrant.com/en/services/postgresql-performance-tuning/">PostgreSQL Performance Tuning</a>服务，该服务不仅覆盖检查点的配置优化，还覆盖PostgreSQL的配置的其他重要部分。</p>
 
-            </section>
-	</div>
     </div>
-</main>
-<footer class="sand">
-    <span class="footer-text">Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></span>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉er </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/basic-tuning-of-checkpoint/>https://guobo507.github.io/2020/basic-tuning-of-checkpoint/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2020/build-your-own-pg-rpms/" class="prev" rel="prev" title="Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包"><i class="iconfont icon-left"></i>&nbsp;Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包</a>
+         
+        
+        <a href="https://guobo507.github.io/2020/the-point-of-pgbouncer/" class="next" rel="next" title="[DEPESZ.COM] What is the point of bouncing?【译】">[DEPESZ.COM] What is the point of bouncing?【译】&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉er</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
 </footer>
-<link rel="stylesheet" href="https://guobo507.github.io/css/solarized-light.css"/>
-<script src="https://guobo507.github.io/js/highlight.pack.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-</body>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
 </html>

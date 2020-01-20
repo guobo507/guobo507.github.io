@@ -1,34 +1,140 @@
 <!DOCTYPE html>
-<html lang="en-us"><head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>在Linux上手动编译安装Percona Toolkit工具 - TheRealGuobo</title>
-    <base href="https://guobo507.github.io/">
-    <link rel="stylesheet" href="https://guobo507.github.io/css/styles.css">
-    <link rel="stylesheet" href="https://guobo507.github.io/css/font.css">
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉er">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2020/deploy-private-docker-registry/" />
+  <link rel="next" href="https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/" />
+  <link rel="canonical" href="https://guobo507.github.io/2020/install-percona-toolkit/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           在Linux上手动编译安装Percona Toolkit工具 | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="在Linux上手动编译安装Percona Toolkit工具 | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "在Linux上手动编译安装Percona Toolkit工具",
+    "headline" : "在Linux上手动编译安装Percona Toolkit工具",
+    "description" : "percona-toolkit是一组高级命令行工具的集合，用来执行各种通过手工执行非常复杂和麻烦的MySQL和系统任务，这些任务包括：\n 检查master和slave数据的一致性； 有效地对记录进行归档； 查找重复的索引； 对服务器信息进行汇总； 分析来自日志和tcpdump的查询； 当系统出问题的时候收集重要的系统信息。  Percona-Toolkit源自Maatkit和Aspersa工具，这两个工具是管理MySQL的最有名的工具，现在Maatkit工具已经不维护了。这些工具主要包括开发、性能、配置、监控、复制、系统、实用六大类，作为一个优秀的DBA，里面有的工具非常有用，如果能掌握并加以灵活应用，将能极大的提高工作效率。\n1 软件包下载 访问http:\/\/www.percona.com\/software\/percona-toolkit\/下载最新版本的Percona Toolkit 或者通过如下命令行来获取最新的版本：\nwget percona.com\/get\/percona-toolkit.tar.gz wget percona.com\/get\/percona-toolkit.rpm 另外，可以从官方网站上找到最新版本，手动下载：http:\/\/www.percona.com\/redir\/downloads\/percona-toolkit\/，也可以从http:\/\/pkgs.repoforge.org\/perl-TermReadKey\/下载最新的TermReadKey包，如：\nwget http:\/\/pkgs.repoforge.org\/perl-TermReadKey\/perl-TermReadKey-2.30-1.el5.rf.x86_64.rpm 2 安装Percona-toolkit 2.1 percona-toolkit的rpm安装方式： rpm -ivh perl-TermReadKey-2.30-1.el5.rf.x86_64.rpm rpm -ivh percona-toolkit-2.1.1-1.noarch.rpm 注意：需要安装Term::ReadKey包，否则会报perl(Term::ReadKey) \x26gt;= 2.10 is needed by percona-toolkit-2.1.1-1.noarch错误。\n2.2 percona-toolkit的编译安装方式： tar -xzvf percona-toolkit-2.1.1.tar.gz cd percona-toolkit-2.1.1 perl Makefile.PL make make test make install ",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉er",
+    "creator" : "肉啃肉er",
+    "publisher": "肉啃肉er",
+    "accountablePerson" : "肉啃肉er",
+    "copyrightHolder" : "肉啃肉er",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-01 17:30:28 \x2b0800 CST",
+    "dateModified" : "2020-01-01 17:30:28 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/install-percona-toolkit\/",
+    "wordCount" : "51",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
 </head>
-<body><header>
-    <nav class="breadcrumb grape">
-	<h4><a href="/">TheRealGuobo</a></h4>
-	<div id="space"></div>
-        
-        <a href="/posts/">Posts</a>
-        
-        <a href="/about/">About Hugo</a>
-        
-    </nav>
-</header>
 
-<main id="single">
-    <div id="post" class="white">
-	<div class="container">
-	    <div id="title">
-                <h1>在Linux上手动编译安装Percona Toolkit工具</h1>
-                <time datetime="2020-01-01T17:30:28&#43;0800">2020-01-01</time>
+  
 
-	    </div>
-            <section class="post-content">
-                <p>percona-toolkit是一组高级命令行工具的集合，用来执行各种通过手工执行非常复杂和麻烦的MySQL和系统任务，这些任务包括：</p>
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">在Linux上手动编译安装Percona Toolkit工具</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉er</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-01 itemprop="datePublished">January 1, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>percona-toolkit是一组高级命令行工具的集合，用来执行各种通过手工执行非常复杂和麻烦的MySQL和系统任务，这些任务包括：</p>
 <ol>
 <li>检查master和slave数据的一致性；</li>
 <li>有效地对记录进行归档；</li>
@@ -57,15 +163,88 @@ make
 make test
 make install
 </code></pre>
-            </section>
-	</div>
     </div>
-</main>
-<footer class="sand">
-    <span class="footer-text">Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></span>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉er </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/install-percona-toolkit/>https://guobo507.github.io/2020/install-percona-toolkit/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2020/deploy-private-docker-registry/" class="prev" rel="prev" title="怎样在CentOS 7上部署自己的私有Docker镜像仓库？"><i class="iconfont icon-left"></i>&nbsp;怎样在CentOS 7上部署自己的私有Docker镜像仓库？</a>
+         
+        
+        <a href="https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/" class="next" rel="next" title="使用pgxc_ctl工具来初始化一个Postgre-XC集群">使用pgxc_ctl工具来初始化一个Postgre-XC集群&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉er</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
 </footer>
-<link rel="stylesheet" href="https://guobo507.github.io/css/solarized-light.css"/>
-<script src="https://guobo507.github.io/js/highlight.pack.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-</body>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
 </html>

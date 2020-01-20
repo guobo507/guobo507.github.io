@@ -1,34 +1,140 @@
 <!DOCTYPE html>
-<html lang="en-us"><head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>用pgbadger工具分析PostgreSQL的系统日志（生成html报告） - TheRealGuobo</title>
-    <base href="https://guobo507.github.io/">
-    <link rel="stylesheet" href="https://guobo507.github.io/css/styles.css">
-    <link rel="stylesheet" href="https://guobo507.github.io/css/font.css">
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉er">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/" />
+  <link rel="next" href="https://guobo507.github.io/2020/build-your-own-pg-rpms/" />
+  <link rel="canonical" href="https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           用pgbadger工具分析PostgreSQL的系统日志（生成html报告） | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="用pgbadger工具分析PostgreSQL的系统日志（生成html报告） | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "用pgbadger工具分析PostgreSQL的系统日志（生成html报告）",
+    "headline" : "用pgbadger工具分析PostgreSQL的系统日志（生成html报告）",
+    "description" : "pgBadger是一个基于Perl编写的PostgreSQL日志分析脚本。\npgBadger通过分析PG的日志文件，以图表的形式展现数据库的各项活动和状态信息,其愿景是：“Make your reports in seconds!”。\npgBadger的特性：\n 图表输出：输出的图表可单独下载为PNG文件，这个功能对于DBA来说，用于数据库巡检截图会比较管用。 并行分析：使用-j或-J可以指定日志分析的并行度。 压缩文件：可支持gzip压缩的日志文件分析。 增量报告：支持增量模式，比如按天分析，最后可以叠加为按周\/月分析。  此外，它不仅收集SQL，还收集服务器日志中的错误日志等。\n详细的Features列表请参见官网（http:\/\/pgbadger.darold.net\/）。\n安装pgBadger pgBadger提供了源代码可以用于编译安装。在PGDG仓库中也已经包含了pgBadger的rpm安装包，针对Ubuntu系列系统，pgBadger也有对应的仓库可以使用。详细信息请看官方页面：http:\/\/pgbadger.darold.net\/#download。\n推荐采用从软件仓库安装的方式来安装pgBadger。\n从仓库安装pgBadger比较简单，以Redhat Linux为例，只需先配置好PGDG仓库，然后使用yum命令在线安装即可。Ubuntu系列Linux与此类似。\n你也可以参考官方文档的说明来安装，地址是：http:\/\/pgbadger.darold.net\/documentation.html。\nPostgreSQL参数配置 使用pgBadger来分析PostgreSQL系统日志需要对postgresql.conf参数文件做相应的配置，具体如下所示：\nlog_destination = \x27csvlog\x27 # 可选 logging_collector = on log_min_duration_statement = 0 log_line_prefix = \x27%t [%p]: user=%u,db=%d,app=%a,client=%h \x27 log_checkpoints = on log_connections = on log_disconnections = on log_lock_waits = on log_temp_files = 0 log_autovacuum_min_duration = 0 log_error_verbosity = default lc_messages=\x27C\x27 log_filename = \x27postgresql-%Y%m%d_%H%M%S.log\x27 # 定义日志文件的名称 log_file_mode = 0600  注意不要同时启用log_min_duration_statement，log_duration和log_statement，这将导致错误的计数器值，也会大大增加日志的大小。log_min_duration_statement是首选启用的参数。",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉er",
+    "creator" : "肉啃肉er",
+    "publisher": "肉啃肉er",
+    "accountablePerson" : "肉啃肉er",
+    "copyrightHolder" : "肉啃肉er",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-08 09:43:27 \x2b0800 CST",
+    "dateModified" : "2020-01-08 09:43:27 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/analyze-pg-syslog-by-pgbadger\/",
+    "wordCount" : "110",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
 </head>
-<body><header>
-    <nav class="breadcrumb grape">
-	<h4><a href="/">TheRealGuobo</a></h4>
-	<div id="space"></div>
-        
-        <a href="/posts/">Posts</a>
-        
-        <a href="/about/">About Hugo</a>
-        
-    </nav>
-</header>
 
-<main id="single">
-    <div id="post" class="white">
-	<div class="container">
-	    <div id="title">
-                <h1>用pgbadger工具分析PostgreSQL的系统日志（生成html报告）</h1>
-                <time datetime="2020-01-08T09:43:27&#43;0800">2020-01-08</time>
+  
 
-	    </div>
-            <section class="post-content">
-                <p>pgBadger是一个基于Perl编写的PostgreSQL日志分析脚本。</p>
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">用pgbadger工具分析PostgreSQL的系统日志（生成html报告）</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉er</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-08 itemprop="datePublished">January 8, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>pgBadger是一个基于Perl编写的PostgreSQL日志分析脚本。</p>
 <p>pgBadger通过分析PG的日志文件，以图表的形式展现数据库的各项活动和状态信息,其愿景是：“Make your reports in seconds!”。</p>
 <p>pgBadger的特性：</p>
 <ol>
@@ -83,15 +189,88 @@ find $REPTDIR -name reports_*.html -mtime +8 -exec rm -rf {} \;
 <p>脚本还会自动删除8天之前的报告文件。</p>
 <p>然后，我们就可以按时从服务器的<code>/home/postgres/pgbadger_reports</code>目录获取报告进行查看和分析了。</p>
 
-            </section>
-	</div>
     </div>
-</main>
-<footer class="sand">
-    <span class="footer-text">Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></span>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉er </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/>https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/" class="prev" rel="prev" title="使用pgxc_ctl工具来初始化一个Postgre-XC集群"><i class="iconfont icon-left"></i>&nbsp;使用pgxc_ctl工具来初始化一个Postgre-XC集群</a>
+         
+        
+        <a href="https://guobo507.github.io/2020/build-your-own-pg-rpms/" class="next" rel="next" title="Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包">Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉er</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
 </footer>
-<link rel="stylesheet" href="https://guobo507.github.io/css/solarized-light.css"/>
-<script src="https://guobo507.github.io/js/highlight.pack.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-</body>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
 </html>

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>The Real Guobo on TheRealGuobo</title>
@@ -6,15 +7,172 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Mon, 20 Jan 2020 09:50:07 +0800</lastBuildDate>
-    <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+	<atom:link href="https://guobo507.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
     
     <item>
-      <title>Posts</title>
-      <link>https://guobo507.github.io/posts/</link>
+      <title>[DEPESZ.COM] What is the point of bouncing?【译】</title>
+      <link>https://guobo507.github.io/2020/the-point-of-pgbouncer/</link>
       <pubDate>Mon, 20 Jan 2020 09:50:07 +0800</pubDate>
       
-      <guid>https://guobo507.github.io/posts/</guid>
-      <description></description>
+      <guid>https://guobo507.github.io/2020/the-point-of-pgbouncer/</guid>
+      <description>原文链接：https://www.depesz.com/2012/12/02/what-is-the-point-of-bouncing/，译者（guobo507）水平有限，不足之处，也就这样了，哈哈。文中所有命令的输出，全部照搬原文，等有时间了我会自己验证的，各位看官请轻喷。
+ 让我们开始吧！
+&amp;ldquo;What is the point of bouncing?&amp;rdquo;
+有些人可能熟悉PgBouncer项目，有些人可能并不熟悉。有些人知道使用它的方式/方法/原因，另一些人则可能不知道。
+我将在此博客文章中阐述PgBouncer的工作原理，为什么要这么做，以及使用它的理由。
+首先，让我们从一些常规描述开始：
+PgBouncer是一个连接池。它与数据库（当然是PostgreSQL）保持着许多连接，当客户端（应用程序）连接到数据库时，将从它获得一个与数据库服务器的现成的连接。
+连接就会存在或多或少的缓存。
+当然，你们可能要问：这有什么意义呢？是与数据库服务器建立连接的速度太慢，您需要对优化建立连接的速度吗？让我们来看看吧。
+我们必须考虑优化至少两个层面的东西：
+ 网络流量 启动新的PostgreSQL后端进程和连接认证的开销  让我们从第一个“网络流量”开始讨论。
+显然，在执行查询操作时，PgBouncer对网络的使用并没什么可以优化，因为它不会缓存数据/查询结果。因此，它实际上会使查询速度变慢一些。因为您没有将查询直接发送到数据库服务器，而是将其发送给了PgBouncer，后者又会将其转发给数据库服务器。
+幸运的是，到目前为止，在我所见过的所有情况下，PgBouncer的查询开销都可以忽略不计。
+但是建立连接的开销呢？
+我使用两种不同的身份验证方案进行了测试：trust和md5。在这两个连接认证方案中，我都运行了psql，且没有任何其他命令，仅仅只是“psql -h localhost -U…”发起连接。在psql启动之前，我已经在系统中运行了tcpdump，从中我可以看到：在收到psql登录成功的提示符后，该psql连接立即就被杀死了。
+下面是trust认证方式下的测试结果：
+14:41:27.603668 IP 127.0.0.1.50126 &amp;gt; 127.0.0.1.5920: Flags [S], seq 716127354, win 32792, options [mss 16396,sackOK,TS val 2052107 ecr 0,nop,wscale 7], length 0 14:41:27.603682 IP 127.0.0.1.5920 &amp;gt; 127.0.0.1.50126: Flags [S.], seq 212587636, ack 716127355, win 32768, options [mss 16396,sackOK,TS val 2052107 ecr 2052107,nop,wscale 7], length 0 14:41:27.</description>
+    </item>
+    
+    <item>
+      <title>PG中调整checkpoint相关参数的基本原则【译】</title>
+      <link>https://guobo507.github.io/2020/basic-tuning-of-checkpoint/</link>
+      <pubDate>Sun, 12 Jan 2020 16:24:41 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/basic-tuning-of-checkpoint/</guid>
+      <description>原文链接：https://www.2ndquadrant.com/en/blog/basics-of-tuning-checkpoints/。译者水平有限，不当之处请多包涵。
+ 在具有一定规模的写入（non-trivial number of writes）的系统上，合适的检查点参数设置对于获得良好的系统性能至关重要。然而，检查点是我们经常在社区邮件列表，以及在为客户进行性能调整审查时，发现设置混乱和配置有问题的区域之一（另一个区域是不久前Citus公司的Joe Nelson曾经讨论过的autovacuum）。因此，我将引导您理解和完成检查点的设置，包括检查点的作用以及如何在PostgreSQL中进行合适的调整。
+What is the point of checkpoints? PostgreSQL是依赖预写日志（WAL）的数据库之一，所有的更改都要首先写入WAL日志（关于数据库更改的流式信息），然后才写入到数据文件中。这样可以提供数据的持久性，因为在发生崩溃的情况下，数据库可以使用WAL日志执行恢复，即从WAL日志中读取数据库的更改，然后将其重新应用到数据库中。
+虽然这可能使实际的写入量增加一倍，但是可以提高数据库整体的性能。用户只需要等待WAL日志刷新到磁盘，而数据文件页仅在内存中被修改，然后稍后在后台刷新到磁盘。这样做很值得，因为对WAL日志本质上是顺序写入的，而对数据文件的写入通常是随机的（因为缓存在内存中的数据页是随机的）。
+假设系统崩溃了，数据库需要执行恢复。最简单的方法是从头开始，并从头开始重放所有的WAL日志。最后，我们就能获得完整的（正确的）数据库。这样做有一个明显的缺点，需要保留并在恢复时重放所有的WAL日志。我们经常处理规模不大的数据库（例如几百GB），但是每天会产生几TB的WAL日志（变更多）。因此，想象一下当数据库运行了一年以后，需要多少磁盘空间来保存所有WAL日志，以及在恢复过程中重放所有WAL日志需要多少时间。
+但是，如果数据库可以保证给定WAL位置（日志中的偏移量）的所有更改，以及直到该位置的所有数据文件的更改都已经刷新到磁盘。那么，数据库在恢复时就可以确定需要恢复的起始位置，并仅仅重放WAL日志的其余部分即可，从而将大大减少恢复的时间。而且数据库还可以删除该“已知良好（known good）”位置之前的WAL文件。
+这正是检查点的目的：确保在执行数据库恢复时不再需要某个时间点之前的WAL日志，从而减少了磁盘空间需求和恢复的时间。
+注意：如果您碰巧是一名游戏玩家，则您可能更加熟悉检查点的概念。如您的角色在游戏中通过了某个点，并且如果您没能击败下一个BOSS或掉进了熔岩中；则您只需要从您已经通过的最后一关重新开始即可，而不是从游戏的开头重新开始。让我们看看在PostgreSQL中是如何实现这一点的。
+我们再讨论另一个比较极端的例子：非常频繁地执行检查点操作（例如，每秒进行一次）。这杨的结果是将只保留非常少量的WAL日志，恢复速度也非常快（只需重放很少量的WAL日志）。但这也会把对数据文件的异步写入转换为类似同步写入（频率高），从而严重影响用户体验（例如，增加COMMIT的延迟，降低系统的吞吐量）。
+因此，在实践中，您可能希望检查点不经常发生而不影响用户，但是也要足够频繁，以合理限制恢复时间和对磁盘空间的需求。
+Triggering checkpoints 可以触发检查点的原因大约有三四种：
+ 直接执行CHECKPOINT命令； 执行需要的检查点的命令（例如：pg_start_backup，CREATE DATABASE，或pg_ctl stop|restart和其他一些命令）； 自上一个检查点以来已达到配置的时间； 自上一个检查点以来生成了已配置的最大WAL文件数量（也称为WAL用尽（running out of WAL）或填充WAL（filling WAL））。  前两条在数据库日常运行中是无关紧要的，很少见的，因为都是必要时才会手动触发的事件。这篇文章是关于如何配置另外两个数据库自动执行的检查点事件的，这些事件会影响定期执行的检查点。
+另外两条基于时间（time）/大小（size）的限制通过如下两个配置参数来实现：
+ checkpoint_timeout = 5min max_wal_size = 1GB (before PostgreSQL 9.5 this was checkpoint_segments)  使用上面的（默认）值，PostgreSQL将在每5分钟，或者在磁盘上的WAL日志文件总量增长到大约1GB之后触发CHECKPOINT操作。
+注意：max_wal_size是总WAL日志文件的大小，它是一个软限制（soft limit），有两个意义。首先，数据库将尝试不超过该限制，但超过它是可以的，因此请在分区文件系统上配置足够的可用空间并对其进行监控。其次，这并不是针对“每个检查点”的限制，由于检查点是分散的（稍后说明），WAL日志的配额会在2-3个检查点之间分配。因此，数据库通常在写入了300–500MB的WAL文件之后自动启动CHECKPOINT操作，具体还要依赖于您的checkpoint_completion_target设置。
+与模版配置文件中的大多数其他参数的默认值一样，默认值也很低，其大小设置可以在Raspberry Pi等小型系统上良好的工作。
+但是，如何来确定您的系统中的一个合适的参数值呢？我们的目标是不要太频繁也不要很少执行检查点操作。关于这两个参数的设置的“最佳实践”包括下面的两个步骤：
+ 设置一个合理的checkpoint_timeout值； 将max_wal_size设置得足够高以至于很少能达到。  实际上很难说一个“合理”的checkpoint_timeout值是多少，因为它取决于恢复时间目标（RTO），即可接受的最大恢复持续时间是多少。
+这有点棘手，因为checkpoint_timeout它限制了生成WAL日志所花费的时间，而不是直接影响到恢复的时间。由于多种原因，我们无法确切地说出恢复需要话费多长时间。WAL日志通常是由多个进程（运行DML）生成的，而恢复时则是由单个进程执行的（此限制主要是固有的，不太可能很快改变）。这不仅影响本地恢复，还会影响到具有流复制的备用数据库的故障转移恢复。当然，本地恢复通常是在重新启动后立即进行的，此时文件系统缓存很冷（cold）。
+通常，默认值（5分钟）比较低，设置30分钟到1小时之间的值是比较常见的。PostgreSQL 9.6甚至将最长期限增加到1天（因此，一些黑客认为这对于某些用例是个好主意）。较低的值也可能由于全页写入而导致写入放大（在此不做讨论）。
+假设我们决定使用30分钟：
+checkpoint_timeout = 30min  现在我们需要评估在30分钟内数据库将产生多少WAL日志文件，以便我们可以将其用于max_wal_size设置。有几种方法可以确定生成多少WAL日志文件：</description>
+    </item>
+    
+    <item>
+      <title>Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包</title>
+      <link>https://guobo507.github.io/2020/build-your-own-pg-rpms/</link>
+      <pubDate>Fri, 10 Jan 2020 11:33:52 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/build-your-own-pg-rpms/</guid>
+      <description>PGDG 中提供了针对多个系统版本都提供了多个版本的 PostgreSQL 的 RPM 安装包，在生产中使用PGDG安装PostgreSQL数据库软件包是非常方便的途径。
+在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本？如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包？
+编译和安装PostgreSQL 本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 进行安装，但本文的目的在于演示整个操作的过程。我将以安装PG 12.1版本为例说明。
+首先，我的系统环境如下：
+[root@pgbuild ~]# cat /etc/centos-release CentOS Linux release 7.6.1810 (Core) [root@pgbuild ~]# uname -a Linux pgbuild 3.10.0-957.5.1.el7.x86_64 #1 SMP Fri Feb 1 14:54:57 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux  根据需要，我设置我的语言环境为我比较习惯的英文环境：
+export LANG=en_US.UTF-8  从操作系统光盘或者在线的系统仓库安装如下的必须的编译所需软件包：
+yum install -y make # VERSION &amp;gt;= 3.80 yum install -y gcc # Recent versions of GCC are recommended.</description>
+    </item>
+    
+    <item>
+      <title>用pgbadger工具分析PostgreSQL的系统日志（生成html报告）</title>
+      <link>https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/</link>
+      <pubDate>Wed, 08 Jan 2020 09:43:27 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/analyze-pg-syslog-by-pgbadger/</guid>
+      <description>pgBadger是一个基于Perl编写的PostgreSQL日志分析脚本。
+pgBadger通过分析PG的日志文件，以图表的形式展现数据库的各项活动和状态信息,其愿景是：“Make your reports in seconds!”。
+pgBadger的特性：
+ 图表输出：输出的图表可单独下载为PNG文件，这个功能对于DBA来说，用于数据库巡检截图会比较管用。 并行分析：使用-j或-J可以指定日志分析的并行度。 压缩文件：可支持gzip压缩的日志文件分析。 增量报告：支持增量模式，比如按天分析，最后可以叠加为按周/月分析。  此外，它不仅收集SQL，还收集服务器日志中的错误日志等。
+详细的Features列表请参见官网（http://pgbadger.darold.net/）。
+安装pgBadger pgBadger提供了源代码可以用于编译安装。在PGDG仓库中也已经包含了pgBadger的rpm安装包，针对Ubuntu系列系统，pgBadger也有对应的仓库可以使用。详细信息请看官方页面：http://pgbadger.darold.net/#download。
+推荐采用从软件仓库安装的方式来安装pgBadger。
+从仓库安装pgBadger比较简单，以Redhat Linux为例，只需先配置好PGDG仓库，然后使用yum命令在线安装即可。Ubuntu系列Linux与此类似。
+你也可以参考官方文档的说明来安装，地址是：http://pgbadger.darold.net/documentation.html。
+PostgreSQL参数配置 使用pgBadger来分析PostgreSQL系统日志需要对postgresql.conf参数文件做相应的配置，具体如下所示：
+log_destination = &#39;csvlog&#39; # 可选 logging_collector = on log_min_duration_statement = 0 log_line_prefix = &#39;%t [%p]: user=%u,db=%d,app=%a,client=%h &#39; log_checkpoints = on log_connections = on log_disconnections = on log_lock_waits = on log_temp_files = 0 log_autovacuum_min_duration = 0 log_error_verbosity = default lc_messages=&#39;C&#39; log_filename = &#39;postgresql-%Y%m%d_%H%M%S.log&#39; # 定义日志文件的名称 log_file_mode = 0600  注意不要同时启用log_min_duration_statement，log_duration和log_statement，这将导致错误的计数器值，也会大大增加日志的大小。log_min_duration_statement是首选启用的参数。</description>
+    </item>
+    
+    <item>
+      <title>使用pgxc_ctl工具来初始化一个Postgre-XC集群</title>
+      <link>https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/</link>
+      <pubDate>Fri, 03 Jan 2020 14:08:58 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/init-pgxc-using-pgxc_ctl/</guid>
+      <description>环境说明 测试环境，一共4个节点，两个用作gtm，另外两个用作gtm_proxy/coordinator和datanode。
+具体安装不说，参考相关文档即可。
+环境规划如下所示：
+目录规划：
+   主机名 目录     pgxc-lvs -   pgxc-gtm1 /data/gtm   pgxc-gtm2 /data/gtm   pgxc-n1 /data/coord, /data/data, /data/coord_s, /data/data_s, /data/gtm_proxy   pgxc-n2 /data/coord, /data/data, /data/coord_s, /data/data_s, /data/gtm_proxy    端口规划：
+   主机名/ROLE 端口     pgxc-lvs 5432(DB)   pgxc-gtm1 6666   pgxc-gtm2 6666   gtm_proxy1 6667   gtm_proxy2 6667   coord1/coord1_pooler Port 6611/6612   coord2/coord2_pooler Port 6611/6612   coord1_slave/coord1_slave_pooler Port 6621/6622   coord2_slave/coord2_slave_pooler Port 6621/6622   data1/data1_pooler Port 6631/6632   data2/data2_pooler Port 6631/6632   data1_slave/data1_slave_pooler Port 6641/6642   data1_slave/data1_slave_pooler Port 6641/6642    软件版本 我是用的是Postgres-XL提供的版本，所有节点都安装相同版本的软件包，如下所示为其中一个节点：</description>
+    </item>
+    
+    <item>
+      <title>在Linux上手动编译安装Percona Toolkit工具</title>
+      <link>https://guobo507.github.io/2020/install-percona-toolkit/</link>
+      <pubDate>Wed, 01 Jan 2020 17:30:28 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/install-percona-toolkit/</guid>
+      <description>percona-toolkit是一组高级命令行工具的集合，用来执行各种通过手工执行非常复杂和麻烦的MySQL和系统任务，这些任务包括：
+ 检查master和slave数据的一致性； 有效地对记录进行归档； 查找重复的索引； 对服务器信息进行汇总； 分析来自日志和tcpdump的查询； 当系统出问题的时候收集重要的系统信息。  Percona-Toolkit源自Maatkit和Aspersa工具，这两个工具是管理MySQL的最有名的工具，现在Maatkit工具已经不维护了。这些工具主要包括开发、性能、配置、监控、复制、系统、实用六大类，作为一个优秀的DBA，里面有的工具非常有用，如果能掌握并加以灵活应用，将能极大的提高工作效率。
+1 软件包下载 访问http://www.percona.com/software/percona-toolkit/下载最新版本的Percona Toolkit 或者通过如下命令行来获取最新的版本：
+wget percona.com/get/percona-toolkit.tar.gz wget percona.com/get/percona-toolkit.rpm 另外，可以从官方网站上找到最新版本，手动下载：http://www.percona.com/redir/downloads/percona-toolkit/，也可以从http://pkgs.repoforge.org/perl-TermReadKey/下载最新的TermReadKey包，如：
+wget http://pkgs.repoforge.org/perl-TermReadKey/perl-TermReadKey-2.30-1.el5.rf.x86_64.rpm 2 安装Percona-toolkit 2.1 percona-toolkit的rpm安装方式： rpm -ivh perl-TermReadKey-2.30-1.el5.rf.x86_64.rpm rpm -ivh percona-toolkit-2.1.1-1.noarch.rpm 注意：需要安装Term::ReadKey包，否则会报perl(Term::ReadKey) &amp;gt;= 2.10 is needed by percona-toolkit-2.1.1-1.noarch错误。
+2.2 percona-toolkit的编译安装方式： tar -xzvf percona-toolkit-2.1.1.tar.gz cd percona-toolkit-2.1.1 perl Makefile.PL make make test make install </description>
+    </item>
+    
+    <item>
+      <title>怎样在CentOS 7上部署自己的私有Docker镜像仓库？</title>
+      <link>https://guobo507.github.io/2020/deploy-private-docker-registry/</link>
+      <pubDate>Wed, 01 Jan 2020 17:17:58 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/deploy-private-docker-registry/</guid>
+      <description>1 安装Docker CE 1.1 卸载旧版本 旧版本的Docker被称为docker或docker-engine，如果系统上已经安装了旧版本，可以执行如下命令卸载：
+yum remove docker \ docker-client \ docker-client-latest \ docker-common \ docker-latest \ docker-latest-logrotate \ docker-logrotate \ docker-selinux \ docker-engine-selinux \ docker-engine  It’s OK if yum reports that none of these packages are installed.
+/var/lib/docker/目录下包含了镜像、容器、数据卷以及网络配置，在卸载旧版本时均会被清除。Docker CE软件包现在以docker-ce来命名。
+1.2 从仓库安装 在线安装之前，你需要配置Docker仓库源，然后从该仓库源安装Docker CE。
+1.2.1 配置YUM仓库   安装依赖软件包。yum-utils软件包包含了yum-config-manager工具，devicemapper存储驱动依赖于device-mapper-persistent-data和lvm2软件包：
+yum install -y yum-utils device-mapper-persistent-data lvm2   使用如下命令配置stable版本的软件仓库：
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo  如果你需要从edge或者test版本的软件仓库安装软件包，也会需要stable的软件仓库：
+   可选：启用edge和test仓库。这两个仓库均包含在上面获取的docker.repo文件中，但是默认处于禁用状态。执行如下命令启用：
+yum-config-manager --enable docker-ce-edge yum-config-manager --enable docker-ce-test 你也可以使用yum-config-manager命令禁用edge或test仓库，执行时加上--disable参数即可。使用--enable参数重新启用。下面的命令演示了如何禁用edge仓库：</description>
+    </item>
+    
+    <item>
+      <title>在CentOS 7上部署CEPH（luminous）分布式对象存储集群系统</title>
+      <link>https://guobo507.github.io/2020/install-ceph-luminous/</link>
+      <pubDate>Wed, 01 Jan 2020 17:10:41 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/install-ceph-luminous/</guid>
+      <description>参考链接：
+ 如何使用国内源部署Ceph：https://www.cnblogs.com/bodhitree/p/5993722.html Ceph - Gitbook：https://www.wanglibing.com/ceph  软件版本：
+ CEPH软件包：12.2.9 (9e300932ef8a8916fb3fda78c58691a6ab0f4217) luminous (stable) ceph-deploy：2.0.1  基础环境：
+ 规划搭建的CEPH集群共有5个节点，所有节点安装和运行CentOS 7.5 x86_64操作系统； 各节点仅采用最小化安装方式安装好操作系统，并按照下面表格中规划配置好IP地址、主机名以及DNS服务器地址； 安装过程中，需要从在线更新内核，在线安装CEPH软件包，因此所有节点必须具备访问互联网的能力；  各节点基本信息及角色规划如下表所示：
+   主机名称 IP地址（Public Network/Cluster Network） CPU/MEM/DISK 角色规划（备注）     ceph-n81 192.168.18.81/10.128.0.1 3C/10G/40GB MON/OSD/MDS/RADOSGW   ceph-n82 192.168.18.82/10.128.0.2 3C/10G/40GB MON/OSD   ceph-n83 192.168.18.83/10.128.0.3 3C/10G/40GB MON/OSD   ceph-n84 192.168.18.84/10.128.0.4 3C/10G/40GB OSD   ceph-n85 192.168.18.85/10.128.0.5 3C/10G/40GB OSD    1 安装ansible  说明：本章以下操作若无特殊说明，均在节点ceph-n81上执行。</description>
+    </item>
+    
+    <item>
+      <title>墙内的我们怎样在自己的MacOS上快速安装brew工具？</title>
+      <link>https://guobo507.github.io/2019/install-brew-on-macos/</link>
+      <pubDate>Tue, 31 Dec 2019 15:19:18 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2019/install-brew-on-macos/</guid>
+      <description>许多国内小伙伴可能都有同感，当我们在国内直接使用官方提供的ruby脚本在MacOS上安装brew时大概率会发现无法访问，即便可以访问也会慢如蜗牛。
+针对这种情况呢，国内很多开源景象站都提供了brew工具的安装源。这里，我推荐大家先科学上网，直接使用浏览器访问如下两个地址，打开这两个网页（纯文本格式的网页），分别保存为对应的文件。如下所示：
+ 安装脚本地址：https://raw.githubusercontent.com/Homebrew/install/master/install，保存为brew_install.rb 卸载脚本地址：https://raw.githubusercontent.com/Homebrew/install/master/uninstall，保存为brew_uninstall.rb  然后使用你习惯的文本编辑器，更改brew_install.rb脚本中的对应的资源链接地址。比如，你想将其替换成清华大学的镜像，可以修改如下两句：
+BREW_REPO = “https://github.com/Homebrew/brew“.freeze CORE_TAP_REPO = “https://github.com/Homebrew/homebrew-core“.freeze  修改为如下所示：
+BREW_REPO = &amp;quot;https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git&amp;quot;.freeze # 修改 CORE_TAP_REPO = &amp;quot;https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git&amp;quot;.freeze # 新增  当然，如果你发现有更好的、更适合你的镜像源，也可以换成别的镜像地址。
+然后，你就可以放心执行如下操作安装brew了：
+ruby /PATH/brew_install.rb  当安装完成brew软件后，我们可以试着安装一个工具软件来测试一下。例如，我这里尝试安装hugo（一个开源的博客站点工具）工具：
+export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles brew update brew install hugo which hugo  如果你想长期替换执行brew install命令时所使用的软件源仓库的地址，可以参考下面的方法设置你的Shell环境变量：
+echo &#39;export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles&#39; &amp;gt;&amp;gt; ~/.bash_profile source ~/.bash_profile  </description>
     </item>
     
     <item>
@@ -23,17 +181,9 @@
       <pubDate>Wed, 09 Apr 2014 00:00:00 +0000</pubDate>
       
       <guid>https://guobo507.github.io/about/</guid>
-      <description>&lt;p&gt;Hugo is the &lt;strong&gt;world’s fastest framework for building websites&lt;/strong&gt;. It is written in Go.&lt;/p&gt;
-&lt;p&gt;It makes use of a variety of open source projects including:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/russross/blackfriday&#34;&gt;https://github.com/russross/blackfriday&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/alecthomas/chroma&#34;&gt;https://github.com/alecthomas/chroma&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/muesli/smartcrop&#34;&gt;https://github.com/muesli/smartcrop&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/spf13/cobra&#34;&gt;https://github.com/spf13/cobra&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/spf13/viper&#34;&gt;https://github.com/spf13/viper&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Learn more and contribute on &lt;a href=&#34;https://github.com/gohugoio&#34;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
-</description>
+      <description>Hugo is the world’s fastest framework for building websites. It is written in Go.
+It makes use of a variety of open source projects including:
+ https://github.com/russross/blackfriday https://github.com/alecthomas/chroma https://github.com/muesli/smartcrop https://github.com/spf13/cobra https://github.com/spf13/viper  Learn more and contribute on GitHub.</description>
     </item>
     
   </channel>

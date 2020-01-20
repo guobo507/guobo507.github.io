@@ -1,140 +1,34 @@
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-  <meta http-equiv="content-type" content="text/html;charset=utf-8">
-  <meta http-equiv="X-UA-Compatible" content="chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noodp"/>
-  <meta name="author" content="肉啃肉">
-  
-  
-  
-  
-  <link rel="next" href="https://guobo507.github.io/2020/install-ceph-luminous/" />
-  <link rel="canonical" href="https://guobo507.github.io/2019/install-brew-on-macos/" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="manifest" href="/site.webmanifest">
-  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-  <meta name="msapplication-TileColor" content="#da532c">
-  <meta name="theme-color" content="#ffffff">
-  <title>
-       
-       
-           墙内的我们怎样在自己的MacOS上快速安装brew工具？ | TheRealGuobo
-       
-  </title>
-  <meta name="title" content="墙内的我们怎样在自己的MacOS上快速安装brew工具？ | TheRealGuobo">
-    
-  
-  <link rel="stylesheet" href="/font/iconfont.css">
-  <link rel="stylesheet" href="/css/main.min.css">
-
-
-  
-  
- 
-
-<script type="application/ld+json">
- "@context" : "http://schema.org",
-    "@type" : "BlogPosting",
-    "mainEntityOfPage": {
-         "@type": "WebPage",
-         "@id": "https:\/\/guobo507.github.io\/"
-    },
-    "articleSection" : "posts",
-    "name" : "墙内的我们怎样在自己的MacOS上快速安装brew工具？",
-    "headline" : "墙内的我们怎样在自己的MacOS上快速安装brew工具？",
-    "description" : "许多国内小伙伴可能都有同感，当我们在国内直接使用官方提供的ruby脚本在MacOS上安装brew时大概率会发现无法访问，即便可以访问也会慢如蜗牛。\n针对这种情况呢，国内很多开源景象站都提供了brew工具的安装源。这里，我推荐大家先科学上网，直接使用浏览器访问如下两个地址，打开这两个网页（纯文本格式的网页），分别保存为对应的文件。如下所示：\n 安装脚本地址：https:\/\/raw.githubusercontent.com\/Homebrew\/install\/master\/install，保存为brew_install.rb 卸载脚本地址：https:\/\/raw.githubusercontent.com\/Homebrew\/install\/master\/uninstall，保存为brew_uninstall.rb  然后使用你习惯的文本编辑器，更改brew_install.rb脚本中的对应的资源链接地址。比如，你想将其替换成清华大学的镜像，可以修改如下两句：\nBREW_REPO = “https:\/\/github.com\/Homebrew\/brew“.freeze CORE_TAP_REPO = “https:\/\/github.com\/Homebrew\/homebrew-core“.freeze  修改为如下所示：\nBREW_REPO = \x26quot;https:\/\/mirrors.tuna.tsinghua.edu.cn\/git\/homebrew\/brew.git\x26quot;.freeze # 修改 CORE_TAP_REPO = \x26quot;https:\/\/mirrors.tuna.tsinghua.edu.cn\/git\/homebrew\/homebrew-core.git\x26quot;.freeze # 新增  当然，如果你发现有更好的、更适合你的镜像源，也可以换成别的镜像地址。\n然后，你就可以放心执行如下操作安装brew了：\nruby \/PATH\/brew_install.rb  当安装完成brew软件后，我们可以试着安装一个工具软件来测试一下。例如，我这里尝试安装hugo（一个开源的博客站点工具）工具：\nexport HOMEBREW_BOTTLE_DOMAIN=https:\/\/mirrors.tuna.tsinghua.edu.cn\/homebrew-bottles brew update brew install hugo which hugo  如果你想长期替换执行brew install命令时所使用的软件源仓库的地址，可以参考下面的方法设置你的Shell环境变量：\necho \x27export HOMEBREW_BOTTLE_DOMAIN=https:\/\/mirrors.tuna.tsinghua.edu.cn\/homebrew-bottles\x27 \x26gt;\x26gt; ~\/.bash_profile source ~\/.bash_profile  ",
-    "inLanguage" : "en-us",
-    "author" : "肉啃肉",
-    "creator" : "肉啃肉",
-    "publisher": "肉啃肉",
-    "accountablePerson" : "肉啃肉",
-    "copyrightHolder" : "肉啃肉",
-    "copyrightYear" : "2019",
-    "datePublished": "2019-12-31 15:19:18 \x2b0800 CST",
-    "dateModified" : "2019-12-31 15:19:18 \x2b0800 CST",
-    "url" : "https:\/\/guobo507.github.io\/2019\/install-brew-on-macos\/",
-    "wordCount" : "45",
-    "keywords" : [  "TheRealGuobo"]
-}
-</script>
-
+<html lang="en-us"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>墙内的我们怎样在自己的MacOS上快速安装brew工具？ - TheRealGuobo</title>
+    <base href="https://guobo507.github.io/">
+    <link rel="stylesheet" href="https://guobo507.github.io/css/styles.css">
+    <link rel="stylesheet" href="https://guobo507.github.io/css/font.css">
 </head>
-
-  
-
-
-  <body class="">
-    <div class="wrapper">
-        <nav class="navbar">
-    <div class="container">
-        <div class="navbar-header header-logo">
-        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
-        </div>
-        <div class="menu navbar-right">
-                
-                
-                <a class="menu-item" href="/posts/" title="">Posts</a>
-                
-                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
-                
-        </div>
-    </div>
-</nav>
-<nav class="navbar-mobile" id="nav-mobile" style="display: none">
-     <div class="container">
-        <div class="navbar-header">
-            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
-            <div class="menu-toggle">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-     
-          <div class="menu" id="mobile-menu">
-                
-                
-                <a class="menu-item" href="/posts/" title="">Posts</a>
-                
-                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
-                
-        </div>
-    </div>
-</nav>
-    	 <main class="main">
-          <div class="container">
-      		
-<article class="post-warp" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">墙内的我们怎样在自己的MacOS上快速安装brew工具？</h1>
-        <div class="post-meta">
-                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉</a> with ♥ 
-                <span class="post-time">
-                on <time datetime=2019-12-31 itemprop="datePublished">December 31, 2019</time>
-                </span>
-                in
-                
-        </div>
-    </header>
-    <div class="post-content">
+<body><header>
+    <nav class="breadcrumb grape">
+	<h4><a href="/">TheRealGuobo</a></h4>
+	<div id="space"></div>
         
-
+        <a href="/posts/">Posts</a>
         
-
+        <a href="/about/">About Hugo</a>
         
-        
-     
-          
-          
-          
+    </nav>
+</header>
 
-          
-          
-          
+<main id="single">
+    <div id="post" class="white">
+	<div class="container">
+	    <div id="title">
+                <h1>墙内的我们怎样在自己的MacOS上快速安装brew工具？</h1>
+                <time datetime="2019-12-31T15:19:18&#43;0800">2019-12-31</time>
 
-          <p>许多国内小伙伴可能都有同感，当我们在国内直接使用官方提供的ruby脚本在MacOS上安装brew时大概率会发现无法访问，即便可以访问也会慢如蜗牛。</p>
+	    </div>
+            <section class="post-content">
+                <p>许多国内小伙伴可能都有同感，当我们在国内直接使用官方提供的ruby脚本在MacOS上安装brew时大概率会发现无法访问，即便可以访问也会慢如蜗牛。</p>
 <p>针对这种情况呢，国内很多开源景象站都提供了brew工具的安装源。这里，我推荐大家先科学上网，直接使用浏览器访问如下两个地址，打开这两个网页（纯文本格式的网页），分别保存为对应的文件。如下所示：</p>
 <ol>
 <li>安装脚本地址：<a href="https://raw.githubusercontent.com/Homebrew/install/master/install">https://raw.githubusercontent.com/Homebrew/install/master/install</a>，保存为<code>brew_install.rb</code></li>
@@ -163,90 +57,15 @@ which hugo
 source ~/.bash_profile
 </code></pre>
 
+            </section>
+	</div>
     </div>
-
-    <div class="post-copyright">
-             
-            <p class="copyright-item">
-                <span>Author:</span>
-                <span>肉啃肉 </span>
-                </p>
-            
-           
-             
-            <p class="copyright-item">
-                    <span>Link:</span>
-                    <a href=https://guobo507.github.io/2019/install-brew-on-macos/>https://guobo507.github.io/2019/install-brew-on-macos/</span>
-            </p>
-            
-             
-            <p class="copyright-item lincese">
-                本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
-            </p>
-            
-    </div>
-
-  
-    <div class="post-tags">
-        
-        <section>
-                <a href="javascript:window.history.back();">back</a></span> · 
-                <span><a href="https://guobo507.github.io/">home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav">
-         
-        
-        <a href="https://guobo507.github.io/2020/install-ceph-luminous/" class="next" rel="next" title="在CentOS 7上部署CEPH（luminous）分布式对象存储集群系统">在CentOS 7上部署CEPH（luminous）分布式对象存储集群系统&nbsp;<i class="iconfont icon-right"></i></a>
-        
-    </div>
-
-    <div class="post-comment">
-          
-                 
-          
-    </div>
-</article>
-          </div>
-		   </main>
-      <footer class="footer">
-    <div class="copyright">
-        &copy;
-        
-        <span itemprop="copyrightYear">2019 - 2020</span>
-        
-        <span class="with-love">
-    	 <i class="iconfont icon-love"></i> 
-         </span>
-         
-            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉</a> | </span> 
-         
-
-         
-		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
-    </div>
+</main>
+<footer class="sand">
+    <span class="footer-text">Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></span>
 </footer>
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-    <script src="/js/vendor_no_gallery.min.js" async=""></script>
-    
-  
-
-
-
-     </div>
-  </body>
+<link rel="stylesheet" href="https://guobo507.github.io/css/solarized-light.css"/>
+<script src="https://guobo507.github.io/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
 </html>

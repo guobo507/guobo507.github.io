@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉er">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2020/the-point-of-pgbouncer/" />
+  
+  <link rel="canonical" href="https://guobo507.github.io/2020/which-tables-should-be-autovacuumed-or-autoanalyzed/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           【翻译】Which tables should be auto vacuumed or auto analyzed? | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="【翻译】Which tables should be auto vacuumed or auto analyzed? | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "【翻译】Which tables should be auto vacuumed or auto analyzed?",
+    "headline" : "【翻译】Which tables should be auto vacuumed or auto analyzed?",
+    "description" : "原文链接：https:\/\/www.depesz.com\/2020\/01\/29\/which-tables-should-be-auto-vacuumed-or-auto-analyzed\/，译者（guobo507）水平有限，不足之处，请将就看吧，哈哈。文中所有命令及输出，全部照搬原文，等有时间了我再自己验证的，各位看官请轻喷。\n 让我们开始吧！\n最近，我正在烦恼自动回收无法跟上数据库表变化的情况。为了解决该问题，我最终决定手动对所有表进行 vacuum 和 analyze（手动 vacuum\/analyze 比通过 autovacuum 守护程序自动运行更快）。\n但是令我感到恼火的是，我对如何检查哪些表正在等待自动清理工作没有好的方法。\n所以，我写了这篇文章。\n首先，让我们从最基础的地方开始。在确定是否应该进行 VACUUM 和\/或 ANALYZE 时，自动清理（Autovacuum）会查看以下参数配置：\n 参数autovacuum_analyze_scale_factor 参数autovacuum_analyze_threshold 参数autovacuum_vacuum_scale_factor 参数autovacuum_vacuum_threshold pg_class视图中的reltuples列的值（这是通过 vacuum 更新的行数的估计值）。 pg_stat_all_tables视图中 n_dead_tup 列中的值（这是尚未清除的死行数）。 pg_stat_all_tables视图的n_mod_since_analyze列中的值（自上次分析以来已修改的行数）。  在我的测试案例中，配置参数的值为：\n=$ SELECT name, setting FROM pg_settings WHERE name IN (\x27autovacuum_analyze_scale_factor\x27, \x27autovacuum_analyze_threshold\x27, \x27autovacuum_vacuum_scale_factor\x27, \x27autovacuum_vacuum_threshold\x27) ORDER BY name; name | setting ---------------------------------\x2b--------- autovacuum_analyze_scale_factor | 0.1 autovacuum_analyze_threshold | 50 autovacuum_vacuum_scale_factor | 0.2 autovacuum_vacuum_threshold | 50 (4 ROWS)  规则很简单\n 如果n_dead_tup大于reltuples * autovacuum_vacuum_scale_factor \x2b autovacuum_vacuum_threshold，则运行 vacuum 操作。 如果n_mod_since_analyze大于reltuples * autovacuum_analyze_scale_factor \x2b autovacuum_analyze_threshold，则运行 analyze 操作。  让我们做一些数学运算。假设我的表有 10000 行，如果我删除（或更新）10000 _ 0.",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉er",
+    "creator" : "肉啃肉er",
+    "publisher": "肉啃肉er",
+    "accountablePerson" : "肉啃肉er",
+    "copyrightHolder" : "肉啃肉er",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-02-08 13:21:39 \x2b0800 CST",
+    "dateModified" : "2020-02-08 13:21:39 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/which-tables-should-be-autovacuumed-or-autoanalyzed\/",
+    "wordCount" : "1019",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="https://blog.csdn.net/icreasy3" title="">CSDN</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="https://blog.csdn.net/icreasy3" title="">CSDN</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">【翻译】Which tables should be auto vacuumed or auto analyzed?</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉er</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-02-08 itemprop="datePublished">February 8, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <blockquote>
+<p>原文链接：https://www.depesz.com/2020/01/29/which-tables-should-be-auto-vacuumed-or-auto-analyzed/，译者（guobo507）水平有限，不足之处，请将就看吧，哈哈。文中所有命令及输出，全部照搬原文，等有时间了我再自己验证的，各位看官请轻喷。</p>
+</blockquote>
+<p>让我们开始吧！</p>
+<p>最近，我正在烦恼自动回收无法跟上数据库表变化的情况。为了解决该问题，我最终决定手动对所有表进行 vacuum 和 analyze（手动 vacuum/analyze 比通过 autovacuum 守护程序自动运行更快）。</p>
+<p>但是令我感到恼火的是，我对如何检查哪些表正在等待自动清理工作没有好的方法。</p>
+<p>所以，我写了这篇文章。</p>
+<p>首先，让我们从最基础的地方开始。在确定是否应该进行 VACUUM 和/或 ANALYZE 时，自动清理（Autovacuum）会查看以下参数配置：</p>
+<ul>
+<li>参数<a href="https://www.postgresql.org/docs/current/runtime-config-autovacuum.html#GUC-AUTOVACUUM-ANALYZE-SCALE-FACTOR"><code>autovacuum_analyze_scale_factor</code></a></li>
+<li>参数<a href="https://www.postgresql.org/docs/current/runtime-config-autovacuum.html#GUC-AUTOVACUUM-ANALYZE-THRESHOLD"><code>autovacuum_analyze_threshold</code></a></li>
+<li>参数<a href="https://www.postgresql.org/docs/current/runtime-config-autovacuum.html#GUC-AUTOVACUUM-VACUUM-SCALE-FACTOR"><code>autovacuum_vacuum_scale_factor</code></a></li>
+<li>参数<a href="https://www.postgresql.org/docs/current/runtime-config-autovacuum.html#GUC-AUTOVACUUM-VACUUM-THRESHOLD"><code>autovacuum_vacuum_threshold</code></a></li>
+<li><a href="https://www.postgresql.org/docs/current/catalog-pg-class.html"><code>pg_class</code></a>视图中的<code>reltuples</code>列的值（这是通过 vacuum 更新的行数的估计值）。</li>
+<li><a href="https://www.postgresql.org/docs/current/monitoring-stats.html#PG-STAT-ALL-TABLES-VIEW"><code>pg_stat_all_tables</code></a>视图中 <code>n_dead_tup</code> 列中的值（这是尚未清除的死行数）。</li>
+<li><a href="https://www.postgresql.org/docs/current/monitoring-stats.html#PG-STAT-ALL-TABLES-VIEW"><code>pg_stat_all_tables</code></a>视图的<code>n_mod_since_analyze</code>列中的值（自上次分析以来已修改的行数）。</li>
+</ul>
+<p>在我的测试案例中，配置参数的值为：</p>
+<pre><code>=$ SELECT name, setting
+FROM pg_settings
+WHERE name IN ('autovacuum_analyze_scale_factor', 'autovacuum_analyze_threshold', 'autovacuum_vacuum_scale_factor', 'autovacuum_vacuum_threshold')
+
+ORDER BY name;
+            name               | setting
+---------------------------------+---------
+autovacuum_analyze_scale_factor | 0.1
+autovacuum_analyze_threshold    | 50
+autovacuum_vacuum_scale_factor  | 0.2
+autovacuum_vacuum_threshold     | 50
+(4 ROWS)
+</code></pre>
+<p>规则很简单</p>
+<ul>
+<li>如果<code>n_dead_tup</code>大于<code>reltuples * autovacuum_vacuum_scale_factor + autovacuum_vacuum_threshold</code>，则运行 vacuum 操作。</li>
+<li>如果<code>n_mod_since_analyze</code>大于<code>reltuples * autovacuum_analyze_scale_factor + autovacuum_analyze_threshold</code>，则运行 analyze 操作。</li>
+</ul>
+<p>让我们做一些数学运算。假设我的表有 10000 行，如果我删除（或更新）10000 _ 0.2 + 50 = 2050 行，它将被执行 vacuum 操作。如果我更新（或插入）10000 _ 0.1 + 50 = 1050 行，它将被执行 analyze 操作。非常简单，是吧！</p>
+<p>有了数学运算，让我们看看这些值实际上是如何变化的。首先我们创建一些测试表：</p>
+<pre><code>=$ CREATE TABLE t1 ( id INT4 generated always AS IDENTITY, payload TEXT, PRIMARY KEY (id));
+=$ CREATE TABLE t2 ( id INT4 generated always AS IDENTITY, payload TEXT, PRIMARY KEY (id));
+=$ CREATE TABLE t3 ( id INT4 generated always AS IDENTITY, payload TEXT, PRIMARY KEY (id));
+</code></pre>
+<p>创建后立即就有明显的统计数据产生：</p>
+<pre><code>=$ SELECT c.relname, c.reltuples, s.n_dead_tup, s.n_mod_since_analyze
+FROM pg_class c LEFT OUTER JOIN pg_stat_all_tables s ON c.oid = s.relid
+WHERE c.relname ~ '^t[123]$' ORDER BY 1;
+
+relname | reltuples | n_dead_tup | n_mod_since_analyze
+---------+-----------+------------+---------------------
+t1      |         0 |          0 |                   0
+t2      |         0 |          0 |                   0
+t3      |         0 |          0 |                   0
+(3 ROWS)
+</code></pre>
+<p>OK。让我们加载一些数据到测试表中：</p>
+<pre><code>=$ copy t1 (payload) FROM '/usr/share/dict/words';
+COPY 102401
+
+=$ copy t2 (payload) FROM '/usr/share/dict/words';
+COPY 102401
+
+=$ copy t3 (payload) FROM '/usr/share/dict/words';
+COPY 102401
+</code></pre>
+<p>紧接着，在禁用自动真空的情况下，你会发现统计信息会更加有趣：</p>
+<pre><code>=$ SELECT c.relname, c.reltuples, s.n_dead_tup, s.n_mod_since_analyze
+FROM pg_class c LEFT OUTER JOIN pg_stat_all_tables s ON c.oid = s.relid
+WHERE c.relname ~ '^t[123]$' ORDER BY 1;
+
+relname | reltuples | n_dead_tup | n_mod_since_analyze
+---------+-----------+------------+---------------------
+t1      |         0 |          0 |              102401
+t2      |         0 |          0 |                   0
+t3      |         0 |          0 |                   0
+(3 ROWS)
+</code></pre>
+<p>请注意，<code>reltuples</code>仍显示为 0，因为这个值是通过 vacuum 操作来更新的（当前 autovacuum 被禁用了）。</p>
+<p>让我们更新一些行：</p>
+<pre><code>=$ UPDATE t1 SET payload = 'new ' || payload WHERE random() &lt; 0.01;
+UPDATE 1068
+
+=$ UPDATE t2 SET payload = 'new ' || payload WHERE random() &lt; 0.1;
+UPDATE 10135
+
+=$ UPDATE t3 SET payload = 'new ' || payload WHERE random() &lt; 0.5;
+UPDATE 51028
+
+=$ SELECT c.relname, c.reltuples, s.n_dead_tup, s.n_mod_since_analyze
+FROM pg_class c LEFT OUTER JOIN pg_stat_all_tables s ON c.oid = s.relid
+WHERE c.relname ~ '^t[123]$' ORDER BY 1;
+
+relname | reltuples | n_dead_tup | n_mod_since_analyze
+---------+-----------+------------+---------------------
+t1      |         0 |       1068 |              103469
+t2      |         0 |      10135 |               10135
+t3      |         0 |      51028 |               51028
+(3 ROWS)
+</code></pre>
+<p>你会发现，<code>n_dead_tup</code>变为了已更新的行数，并且<code>n_mod_since_analyze</code>包含了插入的行和更新的行数之和。</p>
+<p>最后，我们来测试 DELETE 操作。但是，为了能够清楚地看到它的变化，首先我们对表进行 vacuum/analyze，以便将计数器清零：</p>
+<pre><code>=$ vacuum analyze t1, t2, t3;
+VACUUM
+
+=$ SELECT c.relname, c.reltuples, s.n_dead_tup, s.n_mod_since_analyze
+FROM pg_class c LEFT OUTER JOIN pg_stat_all_tables s ON c.oid = s.relid
+WHERE c.relname ~ '^t[123]$' ORDER BY 1;
+
+relname | reltuples | n_dead_tup | n_mod_since_analyze
+---------+-----------+------------+---------------------
+t1      |    102401 |          0 |                   0
+t2      |    102401 |          0 |                   0
+t3      |    102401 |          0 |                   0
+(3 ROWS)
+
+=$ DELETE FROM t1 WHERE random() &lt; 0.01;
+DELETE 999
+
+=$ DELETE FROM t2 WHERE random() &lt; 0.1;
+DELETE 10307
+
+=$ DELETE FROM t3 WHERE random() &lt; 0.5;
+DELETE 51087
+
+=$ SELECT c.relname, c.reltuples, s.n_dead_tup, s.n_mod_since_analyze
+FROM pg_class c LEFT OUTER JOIN pg_stat_all_tables s ON c.oid = s.relid
+WHERE c.relname ~ '^t[123]$' ORDER BY 1;
+
+relname | reltuples | n_dead_tup | n_mod_since_analyze
+---------+-----------+------------+---------------------
+t1      |    102401 |        999 |                 999
+t2      |    102401 |      10307 |               10307
+t3      |    102401 |      51087 |               51087
+(3 ROWS)
+</code></pre>
+<p>很好，我们发现<code>n_dead_tup</code>和<code>n_mod_since_analyze</code>都增加了。</p>
+<p>接下来，让我们写一个查询，它将我们显示哪些表正在等待自动 vacuum 操作。</p>
+<p>首先，为了将所有参数放在同一个位置，我将编写如下的 CTE：</p>
+<pre><code>WITH s AS (
+    SELECT
+        current_setting('autovacuum_analyze_scale_factor')::float8  AS  analyze_factor,
+        current_setting('autovacuum_analyze_threshold')::float8     AS  analyze_threshold,
+        current_setting('autovacuum_vacuum_scale_factor')::float8   AS  vacuum_factor,
+        current_setting('autovacuum_vacuum_threshold')::float8      AS  vacuum_threshold
+)
+</code></pre>
+<p>然后，基于这个 CTE 查询，我可以获得所有表的列表，以及有关是否应该清理或分析的具体信息：</p>
+<pre><code>=$ WITH s AS (
+    SELECT
+        current_setting('autovacuum_analyze_scale_factor')::float8  AS  analyze_factor,
+        current_setting('autovacuum_analyze_threshold')::float8     AS  analyze_threshold,
+        current_setting('autovacuum_vacuum_scale_factor')::float8   AS  vacuum_factor,
+        current_setting('autovacuum_vacuum_threshold')::float8      AS  vacuum_threshold
+)
+SELECT
+    n.nspname,
+    c.relname,
+    c.oid AS relid,
+    t.n_dead_tup,
+    t.n_mod_since_analyze,
+    c.reltuples * s.vacuum_factor + s.vacuum_threshold AS v_threshold,
+    c.reltuples * s.analyze_factor + s.analyze_threshold AS a_threshold
+FROM
+    s,
+    pg_class c
+    JOIN pg_namespace n ON c.relnamespace = n.oid
+    JOIN pg_stat_all_tables t ON c.oid = t.relid
+WHERE
+    c.relkind = 'r'
+    AND c.relname ~ '^t[123]$'
+ORDER BY c.relname;
+
+nspname | relname | relid | n_dead_tup | n_mod_since_analyze | v_threshold | a_threshold
+---------+---------+-------+------------+---------------------+-------------+-------------
+public  | t1      | 17626 |        999 |                 999 |     20530.2 |     10290.1
+public  | t2      | 17636 |      10307 |              112708 |     20530.2 |     10290.1
+public  | t3      | 17646 |      51087 |              153488 |     20530.2 |     10290.1
+(3 ROWS)
+</code></pre>
+<p>我在调试整个查询时包括了<code>relname</code>的过滤条件（第 23 行），以避免在调试查询时显示此数据库中的所有表。当调试完成后，条件<code>c.relname〜'^ t [123] $'</code>将被删除。</p>
+<p>所以，我们有表名，以及它们的<code>n_dead_tup</code>，<code>n_mod_since_analyze</code>以及 vacuum 和 analyze 的阈值。因此，让我们以更好的方式展示这个查询/结果：</p>
+<pre><code>=$ WITH s AS (
+    SELECT
+        current_setting('autovacuum_analyze_scale_factor')::float8  AS  analyze_factor,
+        current_setting('autovacuum_analyze_threshold')::float8     AS  analyze_threshold,
+        current_setting('autovacuum_vacuum_scale_factor')::float8   AS  vacuum_factor,
+        current_setting('autovacuum_vacuum_threshold')::float8      AS  vacuum_threshold
+), tt AS (
+    SELECT
+        n.nspname,
+        c.relname,
+        c.oid AS relid,
+        t.n_dead_tup,
+        t.n_mod_since_analyze,
+        c.reltuples * s.vacuum_factor + s.vacuum_threshold AS v_threshold,
+        c.reltuples * s.analyze_factor + s.analyze_threshold AS a_threshold
+    FROM
+        s,
+        pg_class c
+        JOIN pg_namespace n ON c.relnamespace = n.oid
+        JOIN pg_stat_all_tables t ON c.oid = t.relid
+    WHERE
+        c.relkind = 'r'
+)
+SELECT
+    nspname,
+    relname,
+    relid,
+    CASE WHEN n_dead_tup &gt; v_threshold THEN 'VACUUM' ELSE '' END AS do_vacuum,
+    CASE WHEN n_mod_since_analyze &gt; a_threshold THEN 'ANALYZE' ELSE '' END AS do_analyze
+FROM
+    tt
+WHERE
+    n_dead_tup &gt; v_threshold OR
+    n_mod_since_analyze &gt; a_threshold
+ORDER BY nspname, relname;
+
+nspname | relname | relid | do_vacuum | do_analyze
+---------+---------+-------+-----------+------------
+public  | t2      | 17636 |           | ANALYZE
+public  | t3      | 17646 | VACUUM    | ANALYZE
+(2 ROWS)
+</code></pre>
+<p>该查询可以存储为视图：</p>
+<pre><code>=$ CREATE VIEW autovacuum_queue AS
+WITH s AS (
+    SELECT
+        current_setting('autovacuum_analyze_scale_factor')::float8  AS  analyze_factor,
+        current_setting('autovacuum_analyze_threshold')::float8     AS  analyze_threshold,
+        current_setting('autovacuum_vacuum_scale_factor')::float8   AS  vacuum_factor,
+        current_setting('autovacuum_vacuum_threshold')::float8      AS  vacuum_threshold
+), tt AS (
+    SELECT
+        n.nspname,
+        c.relname,
+        c.oid AS relid,
+        t.n_dead_tup,
+        t.n_mod_since_analyze,
+        c.reltuples * s.vacuum_factor + s.vacuum_threshold AS v_threshold,
+        c.reltuples * s.analyze_factor + s.analyze_threshold AS a_threshold
+    FROM
+        s,
+        pg_class c
+        JOIN pg_namespace n ON c.relnamespace = n.oid
+        JOIN pg_stat_all_tables t ON c.oid = t.relid
+    WHERE
+        c.relkind = 'r'
+)
+SELECT
+    nspname,
+    relname,
+    relid,
+    CASE WHEN n_dead_tup &gt; v_threshold THEN 'VACUUM' ELSE '' END AS do_vacuum,
+    CASE WHEN n_mod_since_analyze &gt; a_threshold THEN 'ANALYZE' ELSE '' END AS do_analyze
+FROM
+    tt
+WHERE
+    n_dead_tup &gt; v_threshold OR
+    n_mod_since_analyze &gt; a_threshold;
+CREATE VIEW
+</code></pre>
+<p>现在，我可以通过此视图，并附加一些其他条件/信息，来展示我希望看到的内容：</p>
+<pre><code>=$ SELECT *,
+    pg_relation_size(relid),
+    pg_total_relation_size(relid)
+FROM autovacuum_queue
+ORDER BY pg_total_relation_size(relid) DESC;
+
+nspname | relname | relid | do_vacuum | do_analyze | pg_relation_size | pg_total_relation_size
+---------+---------+-------+-----------+------------+------------------+------------------------
+public | t3 | 17646 | VACUUM | ANALYZE | 7143424 | 11804672
+public | t2 | 17636 | | ANALYZE | 5128192 | 8011776
+(2 ROWS)
+</code></pre>
+<p>好了，希望您会发现它真的非常有用。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉er </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/which-tables-should-be-autovacuumed-or-autoanalyzed/>https://guobo507.github.io/2020/which-tables-should-be-autovacuumed-or-autoanalyzed/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2020/the-point-of-pgbouncer/" class="prev" rel="prev" title="【翻译】What is the point of bouncing (PgBouncer)?"><i class="iconfont icon-left"></i>&nbsp;【翻译】What is the point of bouncing (PgBouncer)?</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉er</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

@@ -6,10 +6,27 @@
     <description>Recent content in Posts on TheRealGuobo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 20 Jan 2020 09:50:07 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 08 Feb 2020 13:21:39 +0800</lastBuildDate>
     
 	<atom:link href="https://guobo507.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【翻译】Which tables should be auto vacuumed or auto analyzed?</title>
+      <link>https://guobo507.github.io/2020/which-tables-should-be-autovacuumed-or-autoanalyzed/</link>
+      <pubDate>Sat, 08 Feb 2020 13:21:39 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/which-tables-should-be-autovacuumed-or-autoanalyzed/</guid>
+      <description>原文链接：https://www.depesz.com/2020/01/29/which-tables-should-be-auto-vacuumed-or-auto-analyzed/，译者（guobo507）水平有限，不足之处，请将就看吧，哈哈。文中所有命令及输出，全部照搬原文，等有时间了我再自己验证的，各位看官请轻喷。
+ 让我们开始吧！
+最近，我正在烦恼自动回收无法跟上数据库表变化的情况。为了解决该问题，我最终决定手动对所有表进行 vacuum 和 analyze（手动 vacuum/analyze 比通过 autovacuum 守护程序自动运行更快）。
+但是令我感到恼火的是，我对如何检查哪些表正在等待自动清理工作没有好的方法。
+所以，我写了这篇文章。
+首先，让我们从最基础的地方开始。在确定是否应该进行 VACUUM 和/或 ANALYZE 时，自动清理（Autovacuum）会查看以下参数配置：
+ 参数autovacuum_analyze_scale_factor 参数autovacuum_analyze_threshold 参数autovacuum_vacuum_scale_factor 参数autovacuum_vacuum_threshold pg_class视图中的reltuples列的值（这是通过 vacuum 更新的行数的估计值）。 pg_stat_all_tables视图中 n_dead_tup 列中的值（这是尚未清除的死行数）。 pg_stat_all_tables视图的n_mod_since_analyze列中的值（自上次分析以来已修改的行数）。  在我的测试案例中，配置参数的值为：
+=$ SELECT name, setting FROM pg_settings WHERE name IN (&#39;autovacuum_analyze_scale_factor&#39;, &#39;autovacuum_analyze_threshold&#39;, &#39;autovacuum_vacuum_scale_factor&#39;, &#39;autovacuum_vacuum_threshold&#39;) ORDER BY name; name | setting ---------------------------------+--------- autovacuum_analyze_scale_factor | 0.1 autovacuum_analyze_threshold | 50 autovacuum_vacuum_scale_factor | 0.2 autovacuum_vacuum_threshold | 50 (4 ROWS)  规则很简单
+ 如果n_dead_tup大于reltuples * autovacuum_vacuum_scale_factor + autovacuum_vacuum_threshold，则运行 vacuum 操作。 如果n_mod_since_analyze大于reltuples * autovacuum_analyze_scale_factor + autovacuum_analyze_threshold，则运行 analyze 操作。  让我们做一些数学运算。假设我的表有 10000 行，如果我删除（或更新）10000 _ 0.</description>
+    </item>
     
     <item>
       <title>【翻译】What is the point of bouncing (PgBouncer)?</title>

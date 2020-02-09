@@ -46,7 +46,7 @@
     "articleSection" : "posts",
     "name" : "Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包",
     "headline" : "Linux 7上使用源码编译安装PostgreSQL和生成RPM安装包",
-    "description" : "PGDG 中提供了针对多个系统版本都提供了多个版本的 PostgreSQL 的 RPM 安装包，在生产中使用PGDG安装PostgreSQL数据库软件包是非常方便的途径。\n在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本？如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包？\n编译和安装PostgreSQL 本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 进行安装，但本文的目的在于演示整个操作的过程。我将以安装PG 12.1版本为例说明。\n首先，我的系统环境如下：\n[root@pgbuild ~]# cat \/etc\/centos-release CentOS Linux release 7.6.1810 (Core) [root@pgbuild ~]# uname -a Linux pgbuild 3.10.0-957.5.1.el7.x86_64 #1 SMP Fri Feb 1 14:54:57 UTC 2019 x86_64 x86_64 x86_64 GNU\/Linux  根据需要，我设置我的语言环境为我比较习惯的英文环境：\nexport LANG=en_US.UTF-8  从操作系统光盘或者在线的系统仓库安装如下的必须的编译所需软件包：\nyum install -y make # VERSION \x26gt;= 3.80 yum install -y gcc # Recent versions of GCC are recommended.",
+    "description" : "PGDG 中提供了针对多个系统版本都提供了多个版本的 PostgreSQL 的 RPM 安装包，在生产中使用PGDG安装PostgreSQL数据库软件包是非常方便的途径。\n在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本，以及如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包（免去在相同平台上部署PG时繁琐的编译过程）？\n编译和安装PostgreSQL 本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 仓库获取安装包，但本文的目的在于演示整个编译和安装操作的过程。我将以编译安装PG 11.5版本为例来进行说明。\n首先，我的系统环境如下：\n[root@pgbuild ~]# cat \/etc\/centos-release CentOS Linux release 7.6.1810 (Core) [root@pgbuild ~]# uname -a Linux pgbuild 3.10.0-957.5.1.el7.x86_64 #1 SMP Fri Feb 1 14:54:57 UTC 2019 x86_64 x86_64 x86_64 GNU\/Linux  根据需要，我设置我的语言环境为我比较习惯的英文环境：\nexport LANG=en_US.UTF-8  从操作系统光盘或者在线的系统仓库安装如下的必须的编译所需软件包：\nyum install -y make # VERSION \x26gt;= 3.80 yum install -y gcc # Recent versions of GCC are recommended.",
     "inLanguage" : "en-us",
     "author" : "肉啃肉er",
     "creator" : "肉啃肉er",
@@ -57,7 +57,7 @@
     "datePublished": "2020-01-10 11:33:52 \x2b0800 CST",
     "dateModified" : "2020-01-10 11:33:52 \x2b0800 CST",
     "url" : "https:\/\/guobo507.github.io\/2020\/build-your-own-pg-rpms\/",
-    "wordCount" : "1278",
+    "wordCount" : "1279",
     "keywords" : [  "TheRealGuobo"]
 }
 </script>
@@ -139,9 +139,9 @@
           
 
           <p>PGDG 中提供了针对多个系统版本都提供了多个版本的 PostgreSQL 的 RPM 安装包，在生产中使用PGDG安装PostgreSQL数据库软件包是非常方便的途径。</p>
-<p>在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本？如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包？</p>
+<p>在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本，以及如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包（免去在相同平台上部署PG时繁琐的编译过程）？</p>
 <h1 id="postgresql">编译和安装PostgreSQL</h1>
-<p>本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 进行安装，但本文的目的在于演示整个操作的过程。我将以安装PG 12.1版本为例说明。</p>
+<p>本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 仓库获取安装包，但本文的目的在于演示整个编译和安装操作的过程。我将以编译安装PG 11.5版本为例来进行说明。</p>
 <p>首先，我的系统环境如下：</p>
 <pre><code>[root@pgbuild ~]# cat /etc/centos-release
 CentOS Linux release 7.6.1810 (Core)
@@ -268,13 +268,13 @@ make[2]: Leaving directory `/home/yhpg/postgresql-11.5/build_dir/src/backend/jit
 make[1]: Leaving directory `/home/yhpg/postgresql-11.5/build_dir/src'
 All of PostgreSQL successfully made. Ready to install.
 </code></pre>
-<p>接下来，你可以直接将编译好的 PostgreSQL 安装到服务器上，可以参考如下的命令来将PostgreSQL安装到服务器上。由于我们使用普通用户yhpg进行编译，但是安装目录为<code>/usr/pgsql-11</code>，默认该用户没有权限，因此我们先用root用户创建该目录，并设置正确的权限：</p>
+<p>接下来，你可以直接将编译好的 PostgreSQL 安装到服务器上，可以参考如下的命令来将PostgreSQL安装到服务器上。由于我们使用普通用户yhpg进行编译，但是安装目录为<code>/usr/pgsql-11</code>，默认该用户没有权限，因此我们先用root用户创建该目录，并设置正确的权限（您也可以使用root用户来编译和安装）：</p>
 <pre><code>su - root
 mkdir /usr/pgsql-11
 chown -R yhpg:yhpg /usr/pgsql-11
 chmod 755 /usr/pgsql-11
 </code></pre>
-<p>然后，在使用yhpg用户执行安装：</p>
+<p>然后，我们使用yhpg用户执行安装命令：</p>
 <pre><code>su - yhpg
 cd /home/yhpg/postgresql-11.5/build_dir
 make install-world
@@ -357,14 +357,14 @@ total 1304
 -rw-r--r-- 1 yhpg yhpg  4571 Jan 16 09:16 btree_gin--1.2--1.3.sql
 ......
 </code></pre>
-<p>使用yhpg用户，执行下面的命令创建一个数据库集群实例来测试一下安装的结果：</p>
+<p>使用yhpg用户，执行下面的命令集合，创建一个数据库集群实例来测试一下安装的结果：</p>
 <pre><code>su - yhpg
 export PGHOME=/usr/pgsql-11
 export PGDATA=/home/yhpg/data
 export PATH=$PGHOME/bin:$PATH
 mkdir -p $PGDATA
 chmod 700 $PGDATA
-echo 1qaz2wsx &gt; /tmp/.super_password
+echo YOUR_PASSWORD &gt; /tmp/.super_password
 initdb --username=yhpg --pgdata=$PGDATA --auth=trust --encoding=UTF-8 --locale=C --pwfile=/tmp/.super_password
 rm -f /tmp/.super_password
 
@@ -409,8 +409,8 @@ plpgsql            | 1.0     | pg_catalog | PL/pgSQL procedural language
 <pre><code>pg_ctl -D $PGDATA -l $PGDATA/postgresql.log -m fast stop
 </code></pre>
 <p>到这里，你已经成功在CentOS 7上编译和安装了 PostgreSQL 软件，并运行了一个数据库实例。</p>
-<h1 id="postgresql-rpm">创建PostgreSQL RPM安装包</h1>
-<p>从这里开始，我会展示如何创建 PostgreSQL 的 RPM 软件包。</p>
+<h1 id="postgresql-rpm">创建PostgreSQL RPM包</h1>
+<p>从这里开始，我会展示如何创建 PostgreSQL 的 RPM 软件包，我将以版本11.5为例来说明。</p>
 <p>这里我们要用到一个项目<code>dennis-apter/pgrpms</code>，可以从Github上找到该项目。实际过程中你需要现将该项目克隆到服务器上，具体的步骤及命令这省略了。我的环境中，我已经提前下载好了该项目的源码包；因此，我们就直接开始吧：</p>
 <pre><code>su - yhpg
 cd /home/yhpg
@@ -433,7 +433,8 @@ rpmbuild -bb postgresql-11.spec
 ls -l
 </code></pre>
 <p>参照上面的步骤，你就可以在服务器上生成任意版本的PostgreSQL的RPM安装包了。</p>
-<p>如果你有其他需求，可以根据需要拷贝合适的文件至<code>~/rpmbuild/SOURCES/</code>下，并进行深度定制。这里我已经根据我们的实际需要，定制好了一个在Linux 7上生成PostgreSQL 12的软件包的项目，地址是：<a href="https://github.com/guobo507/yhpg-12-rpmbuild/">https://github.com/guobo507/yhpg-12-rpmbuild/</a>，你可以参考该项目进行RPM打包。</p>
+<p>如果你有其他需求，可以根据需要拷贝合适的文件至<code>~/rpmbuild/SOURCES/</code>下，并进行深度定制。</p>
+<p>这里，我已经根据我的实际需要，定制好了一个在Linux 7上生成PostgreSQL 12的软件包的项目，地址是：<a href="https://github.com/guobo507/yhpg-12-rpmbuild/">https://github.com/guobo507/yhpg-12-rpmbuild/</a>，你可以参考该项目进行定制和RPM打包。</p>
 
     </div>
 

@@ -6,10 +6,24 @@
     <description>Recent content in Posts on TheRealGuobo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 08 Feb 2020 13:21:39 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 09 Feb 2020 19:14:17 +0800</lastBuildDate>
     
 	<atom:link href="https://guobo507.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【译】How Much Ram Is PostgreSQL Using?</title>
+      <link>https://guobo507.github.io/2020/how-much-ram-is-pg-using/</link>
+      <pubDate>Sun, 09 Feb 2020 19:14:17 +0800</pubDate>
+      
+      <guid>https://guobo507.github.io/2020/how-much-ram-is-pg-using/</guid>
+      <description>原文链接：https://www.depesz.com/2012/06/09/how-much-ram-is-postgresql-using/，译者（guobo507）水平有限，不足之处，请将就看吧，哈哈。文中所有命令及输出，全部照搬原文，看官请各自验证，轻喷。
+ 免责声明：本文中涉及的所有数据和示例都在 Linux 上，类似的数据也可能在其他系统上通过相应的方法获取，只是我通常在 Linux 上工作，对其他系统不是十分了解。
+大家可能会遇到这样的一个问题，PostgreSQL 有时会使用了很多的系统内存。为什么会这样呢？又如何缓解呢？
+在我们进行必要的“优化”之前，我们应该真正的了解问题所在。但是我们并不一定能真正了解问题所在，因为包括ps和top在内的两个标准系统工具报告的信息都不一定准确，这到底是为什么呢？让我们来细细了解。
+我的桌面系统上运行了一个非常简单的 PostgreSQL 实例，配置了 4 GB 的共享缓冲区和 100MB 的work_mem。并且，我确实运行了一些工作负载，现在我通过ps工具观察到了下面的输出：
+=$ ps -u pgdba uf USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND pgdba 32324 0.0 0.0 79788 1900 ? S 14:26 0:00 sshd: pgdba@pts/13 pgdba 32325 0.0 0.0 25844 5788 pts/13 Ss+ 14:26 0:00 \_ -bash pgdba 27502 0.0 0.8 4344112 109724 ? S 14:18 0:00 /home/pgdba/work/bin/postgres pgdba 27506 0.</description>
+    </item>
     
     <item>
       <title>【翻译】Which tables should be auto vacuumed or auto analyzed?</title>
@@ -90,8 +104,8 @@ checkpoint_timeout = 30min  现在我们需要评估在30分钟内数据库将�
       
       <guid>https://guobo507.github.io/2020/build-your-own-pg-rpms/</guid>
       <description>PGDG 中提供了针对多个系统版本都提供了多个版本的 PostgreSQL 的 RPM 安装包，在生产中使用PGDG安装PostgreSQL数据库软件包是非常方便的途径。
-在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本？如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包？
-编译和安装PostgreSQL 本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 进行安装，但本文的目的在于演示整个操作的过程。我将以安装PG 12.1版本为例说明。
+在如今国产化、自主可控的浪潮之下，很多时候我们想要在国产的平台、（所谓）国产的操作系统中使用PostgreSQL数据库，大多数时候系统中自带的PostgreSQL版本很可能不符合我们的要求。因此，本文的目的是演示如何在指定平台上编译安装想要的 PostgreSQL 版本，以及如何使用 PG 源代码在指定的硬件平台上创建该平台专用的 PostgreSQL 的 RPM 安装包（免去在相同平台上部署PG时繁琐的编译过程）？
+编译和安装PostgreSQL 本文讨论的是针对RedHat系列Linux（我是用的是 CentOS 7）上的实践，使用的平台也是 x86_64 平台。虽然在该平台可以直接从 PGDG 仓库获取安装包，但本文的目的在于演示整个编译和安装操作的过程。我将以编译安装PG 11.5版本为例来进行说明。
 首先，我的系统环境如下：
 [root@pgbuild ~]# cat /etc/centos-release CentOS Linux release 7.6.1810 (Core) [root@pgbuild ~]# uname -a Linux pgbuild 3.10.0-957.5.1.el7.x86_64 #1 SMP Fri Feb 1 14:54:57 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux  根据需要，我设置我的语言环境为我比较习惯的英文环境：
 export LANG=en_US.UTF-8  从操作系统光盘或者在线的系统仓库安装如下的必须的编译所需软件包：

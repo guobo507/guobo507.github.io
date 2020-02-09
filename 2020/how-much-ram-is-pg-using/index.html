@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="肉啃肉er">
+  
+  
+  
+  <link rel="prev" href="https://guobo507.github.io/2020/which-tables-should-be-autovacuumed-or-autoanalyzed/" />
+  
+  <link rel="canonical" href="https://guobo507.github.io/2020/how-much-ram-is-pg-using/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           【译】How Much Ram Is PostgreSQL Using? | TheRealGuobo
+       
+  </title>
+  <meta name="title" content="【译】How Much Ram Is PostgreSQL Using? | TheRealGuobo">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/guobo507.github.io\/"
+    },
+    "articleSection" : "posts",
+    "name" : "【译】How Much Ram Is PostgreSQL Using?",
+    "headline" : "【译】How Much Ram Is PostgreSQL Using?",
+    "description" : "原文链接：https:\/\/www.depesz.com\/2012\/06\/09\/how-much-ram-is-postgresql-using\/，译者（guobo507）水平有限，不足之处，请将就看吧，哈哈。文中所有命令及输出，全部照搬原文，看官请各自验证，轻喷。\n 免责声明：本文中涉及的所有数据和示例都在 Linux 上，类似的数据也可能在其他系统上通过相应的方法获取，只是我通常在 Linux 上工作，对其他系统不是十分了解。\n大家可能会遇到这样的一个问题，PostgreSQL 有时会使用了很多的系统内存。为什么会这样呢？又如何缓解呢？\n在我们进行必要的“优化”之前，我们应该真正的了解问题所在。但是我们并不一定能真正了解问题所在，因为包括ps和top在内的两个标准系统工具报告的信息都不一定准确，这到底是为什么呢？让我们来细细了解。\n我的桌面系统上运行了一个非常简单的 PostgreSQL 实例，配置了 4 GB 的共享缓冲区和 100MB 的work_mem。并且，我确实运行了一些工作负载，现在我通过ps工具观察到了下面的输出：\n=$ ps -u pgdba uf USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND pgdba 32324 0.0 0.0 79788 1900 ? S 14:26 0:00 sshd: pgdba@pts\/13 pgdba 32325 0.0 0.0 25844 5788 pts\/13 Ss\x2b 14:26 0:00 \\_ -bash pgdba 27502 0.0 0.8 4344112 109724 ? S 14:18 0:00 \/home\/pgdba\/work\/bin\/postgres pgdba 27506 0.",
+    "inLanguage" : "en-us",
+    "author" : "肉啃肉er",
+    "creator" : "肉啃肉er",
+    "publisher": "肉啃肉er",
+    "accountablePerson" : "肉啃肉er",
+    "copyrightHolder" : "肉啃肉er",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-02-09 19:14:17 \x2b0800 CST",
+    "dateModified" : "2020-02-09 19:14:17 \x2b0800 CST",
+    "url" : "https:\/\/guobo507.github.io\/2020\/how-much-ram-is-pg-using\/",
+    "wordCount" : "877",
+    "keywords" : [  "TheRealGuobo"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="https://blog.csdn.net/icreasy3" title="">CSDN</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://guobo507.github.io/">TheRealGuobo</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Posts</a>
+                
+                <a class="menu-item" href="https://blog.csdn.net/icreasy3" title="">CSDN</a>
+                
+                <a class="menu-item" href="/about/" title="About Hugo">About Hugo</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">【译】How Much Ram Is PostgreSQL Using?</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://guobo507.github.io/" rel="author">肉啃肉er</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-02-09 itemprop="datePublished">February 9, 2020</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <blockquote>
+<p>原文链接：<a href="https://www.depesz.com/2012/06/09/how-much-ram-is-postgresql-using/">https://www.depesz.com/2012/06/09/how-much-ram-is-postgresql-using/</a>，译者（guobo507）水平有限，不足之处，请将就看吧，哈哈。文中所有命令及输出，全部照搬原文，看官请各自验证，轻喷。</p>
+</blockquote>
+<p>免责声明：本文中涉及的所有数据和示例都在 Linux 上，类似的数据也可能在其他系统上通过相应的方法获取，只是我通常在 Linux 上工作，对其他系统不是十分了解。</p>
+<p>大家可能会遇到这样的一个问题，PostgreSQL 有时会使用了很多的系统内存。为什么会这样呢？又如何缓解呢？</p>
+<p>在我们进行必要的“优化”之前，我们应该真正的了解问题所在。但是我们并不一定能真正了解问题所在，因为包括<code>ps</code>和<code>top</code>在内的两个标准系统工具报告的信息都不一定准确，这到底是为什么呢？让我们来细细了解。</p>
+<p>我的桌面系统上运行了一个非常简单的 PostgreSQL 实例，配置了 4 GB 的共享缓冲区和 100MB 的<code>work_mem</code>。并且，我确实运行了一些工作负载，现在我通过<code>ps</code>工具观察到了下面的输出：</p>
+<pre><code>=$ ps -u pgdba uf
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+pgdba    32324  0.0  0.0  79788  1900 ?        S    14:26   0:00 sshd: pgdba@pts/13
+pgdba    32325  0.0  0.0  25844  5788 pts/13   Ss+  14:26   0:00  \_ -bash
+pgdba    27502  0.0  0.8 4344112 109724 ?      S    14:18   0:00 /home/pgdba/work/bin/postgres
+pgdba    27506  0.0  0.0  24792   620 ?        Ss   14:18   0:00  \_ postgres: logger process
+pgdba    27508  1.5 34.7 4346688 4274752 ?     Ss   14:18   0:14  \_ postgres: checkpointer process
+pgdba    27509  0.2 12.1 4346164 1495780 ?     Ss   14:18   0:02  \_ postgres: writer process
+pgdba    27510  0.3  0.1 4346164 17292 ?       Ss   14:18   0:03  \_ postgres: wal writer process
+pgdba    27511  0.0  0.0 4347168 2408 ?        Ss   14:18   0:00  \_ postgres: autovacuum launcher process
+pgdba    27512  0.0  0.0  26888   856 ?        Ss   14:18   0:00  \_ postgres: archiver process   last was 00000001000000060000004D
+pgdba    27513  0.0  0.0  27184  1160 ?        Ss   14:18   0:00  \_ postgres: stats collector process
+pgdba    27713  5.6 34.8 4347268 4285716 ?     Ss   14:19   0:51  \_ postgres: depesz depesz [local] idle
+pgdba    27722  2.6  3.1 4347412 392704 ?      Ss   14:19   0:23  \_ postgres: depesz depesz [local] idle
+pgdba    27726 15.8 35.0 4352560 4309776 ?     Ss   14:19   2:25  \_ postgres: depesz depesz [local] idle
+</code></pre>
+<p>同时，<code>top</code>命令也报告了大致相同的结果。</p>
+<p>结果非常的可疑，因为<code>free</code>命令显示了下面的结果：</p>
+<pre><code>=$ free
+            total       used       free     shared    buffers     cached
+Mem:      12296140   12144356     151784          0      26828   10644460
+-/+ buffers/cache:    1473068   10823072
+Swap:            0          0          0
+</code></pre>
+<p>即，目前仅仅使用了 1.5GB 的内存（磁盘缓存用了 10GB 内存，但如果有任何应用需要更多内存，这一部分将被随时释放）。</p>
+<p>那么，我怎么会在<code>ps</code>命令中看到那么庞大的数字呢？</p>
+<p>首先，我们需要忽略 VSZ 列。重要的是 RSS。但是它却没有什么实际的意义：</p>
+<pre><code>=$ ps -u pgdba o pid,rss:8,cmd | awk 'NR&gt;1 {A+=$2} {print} END{print &quot;Total RSS: &quot; A}'
+PID      RSS CMD
+27502   109724 /home/pgdba/work/bin/postgres
+27506      620 postgres: logger process
+27508  4274752 postgres: checkpointer process
+27509  1755420 postgres: writer process
+27510    17292 postgres: wal writer process
+27511     2408 postgres: autovacuum launcher process
+27512      856 postgres: archiver process   last was 00000001000000060000004D
+27513     1160 postgres: stats collector process
+27713  4285716 postgres: depesz depesz [local] idle
+27722   392700 postgres: depesz depesz [local] idle
+27726  4309776 postgres: depesz depesz [local] idle
+32324     1900 sshd: pgdba@pts/13
+32325     5788 -bash
+Total RSS: 15158112
+</code></pre>
+<p>从上可知，所有 PostgreSQ 进程的 RSS 列之和为 15GB，比我在此机器上的总的物理内存还多。那么，真正的内存使用量是多少呢？假如我杀死 PG 服务会释放多少内存呢？</p>
+<p>幸运的是，在 Linux 系统中，通过<code>/proc</code>文件系统中的<code>filesystem/mountpoint/fairy</code>，我们可以查看 RAM 的确切用途。</p>
+<p>Linux 上的每个进程在<code>/proc</code>中都有一个目录。在此目录中，有许多文件和目录。它们都显示为“0”字节大小，但是请不要被所报告的文件大小所迷惑，但它们确实包含了许多信息，这很神奇。</p>
+<p>我们感兴趣的一个文件是“smaps”，它的内容看起来像这样：</p>
+<pre><code>=$ sudo head -n 20 /proc/27713/smaps
+00400000-00914000 r-xp 00000000 09:00 3545633                            /home/pgdba/work/bin/postgres
+Size:               5200 kB
+Rss:                 964 kB
+Pss:                 214 kB
+Shared_Clean:        964 kB
+Shared_Dirty:          0 kB
+Private_Clean:         0 kB
+Private_Dirty:         0 kB
+Referenced:          964 kB
+Anonymous:             0 kB
+AnonHugePages:         0 kB
+Swap:                  0 kB
+KernelPageSize:        4 kB
+MMUPageSize:           4 kB
+Locked:                0 kB
+00b13000-00b14000 r--p 00513000 09:00 3545633                            /home/pgdba/work/bin/postgres
+Size:                  4 kB
+Rss:                   4 kB
+Pss:                   0 kB
+Shared_Clean:          0 kB
+...
+</code></pre>
+<p>对于此特定的进程，smaps 文件具有 2000 行以上的内容，因此我将不向您显示所有内容。</p>
+<p>不管怎样，通过<code>ps</code>命令的报告，ID 为 27713 的进程使用了 4285716 KB 的 RAM。那么，它为什么这么大？使用<code>grep</code>工具，我们看到：</p>
+<pre><code>=$ sudo grep -B1 -E '^Size: *[0-9]{6}' /proc/27713/smaps
+7fde8dacc000-7fdf952d6000 rw-s 00000000 00:04 232882235                  /SYSV005a5501 (deleted)
+Size:            4317224 kB
+</code></pre>
+<p>只有一个“块”的大小超过了 100MB，并且它的大小非常接近该进程内存使用量的总大小。</p>
+<p>有关这个进程内存的完整信息如下：</p>
+<pre><code>7fde8dacc000-7fdf952d6000 rw-s 00000000 00:04 232882235                  /SYSV005a5501 (deleted)
+Size:            4317224 kB
+Rss:             4280924 kB
+Pss:             1245734 kB
+Shared_Clean:          0 kB
+Shared_Dirty:    4280924 kB
+Private_Clean:         0 kB
+Private_Dirty:         0 kB
+Referenced:      4280924 kB
+Anonymous:             0 kB
+AnonHugePages:         0 kB
+Swap:                  0 kB
+KernelPageSize:        4 kB
+MMUPageSize:           4 kB
+Locked:                0 kB
+</code></pre>
+<p>这些信息大部分都感觉比较神秘，但我们看到了几个事实：</p>
+<ul>
+<li>它是共享内存（第一行包含 rw-s，其中“s”代表共享）</li>
+<li>从输出上看（/SYSV005a5501 (deleted)），共享内存似乎是使用 mmaping 删除的文件完成该操作的，因此该内存将包含在<code>free</code>命令的“Cached”（缓存）列中，而不是在“Used”（已使用）列中。</li>
+<li>共享块的大小为 4317224 KB，而共享块中的 4280924 KB 实际上驻留在了物理内存中。</li>
+</ul>
+<p>因此，没有关系，那是<code>shared_buffers</code>内存。但事实上，大多数后端进程都会使用共享缓冲区（shared buffers）。而且，更糟的是，它们的使用程度是不同的。例如，下面是来自进程 27722 的相同的共享缓冲区使用情况数据：</p>
+<pre><code>=$ sudo grep -A14 7fde8dacc000-7fdf952d6000 /proc/27722/smaps
+7fde8dacc000-7fdf952d6000 rw-s 00000000 00:04 232882235                  /SYSV005a5501 (deleted)
+Size:            4317224 kB
+Rss:              388652 kB
+Pss:               95756 kB
+Shared_Clean:          0 kB
+Shared_Dirty:     388652 kB
+Private_Clean:         0 kB
+Private_Dirty:         0 kB
+Referenced:       388652 kB
+Anonymous:             0 kB
+AnonHugePages:         0 kB
+Swap:                  0 kB
+KernelPageSize:        4 kB
+MMUPageSize:           4 kB
+Locked:                0 kB
+</code></pre>
+<p>在这里，我们看到这个进程仅请求/使用了 388MB 的内存。</p>
+<p>因此计算将很复杂。例如，我们可能有两个进程，每个进程使用 400MB 的<code>shared_buffers</code>，但它没有告诉我们它实际使用了多少内存，因为它们可能使用了 100MB 的相同的缓冲区和各自 300MB 的不同缓冲区，因此总的内存使用量将为 700MB。</p>
+<p>我们确实知道此 <code>shared_buffers</code> 块的总大小为 4317224 KB。这很好，但是其他事情呢？例如，库文件又占用了的内存呢，要知道内核是可以在多个进程之间共享它们的。</p>
+<p>幸运的是，在 2007 年的时候，Fengguang Wu 发布了（以前写过）一个非常酷的内核补丁，在 smaps 信息中添加了“Pss”信息。</p>
+<p>基本上，Pss 最大可以达到 Rss，但是如果多个进程使用相同的内存页，则 Pss 会低一些。</p>
+<p>这就是为什么上面的例子中，Pss 远远低于 Rss/Size 的原因。例如，在最后一个例子中。 Rss 为 388652 KB，而 Pss 只有 95756 KB，这意味着该后端进程使用的大多数页面也被其他 3 个后端使用。</p>
+<p>因此，了解了 Pss 之后，我们终于可以得到正在运行的 PG 集群的实际内存使用情况了：</p>
+<pre><code>=$ ps -u pgdba o pid= | sed 's#.*#/proc/&amp;/smaps#' | xargs sudo grep ^Pss: | awk '{A+=$2} END{print A}'
+4329040
+</code></pre>
+<p>如果您不禁说“WTF，这 tm 是什么命令？！”，请让我来解释一下。第一个命令：</p>
+<pre><code>=\$ ps -u pgdba o pid=
+27502
+...
+32325
+</code></pre>
+<p>只返回 pgdba 用户的所有进程的 pids（通常您可能需要用 postgres 用户，但我就是与众不同，我喜欢用 pgdba 的身份运行 PostgreSQL）。</p>
+<p>第二个命令，<code>sed</code>将 pids 更改为 smaps 文件的路径：</p>
+<pre><code>=$ ps -u pgdba o pid= | sed 's#.*#/proc/&amp;/smaps#'
+/proc/27502/smaps
+...
+/proc/32325/smaps
+</code></pre>
+<p>然后我对<code>sed</code>命令处理后的文件中的以 Pss 字符开始的行做简单的<code>grep</code>处理。可能返回很多行，例如：</p>
+<pre><code>/proc/32325/smaps:Pss:                   0 kB
+/proc/32325/smaps:Pss:                   4 kB
+/proc/32325/smaps:Pss:                   4 kB
+</code></pre>
+<p>然后，使用<code>awk</code>命令汇总第二列（即大小）。我得到的结果为 4329040，以千字节（KB）为单位。</p>
+<p>因此，从理论上讲，如果我停止 PG 集群，我将回收大量的 RAM。让我们看看是否正确：</p>
+<pre><code>=$ free; pg_ctl -m IMMEDIATE stop; free
+            total       used       free     shared    buffers     cached
+Mem:      12296140   12145424     150716          0      40708   10640968
+-/+ buffers/cache:    1463748   10832392
+Swap:            0          0          0
+
+waiting FOR server TO shut down.... done
+server stopped
+
+            total       used       free     shared    buffers     cached
+Mem:      12296140    7781960    4514180          0      40856    6325092
+-/+ buffers/cache:    1416012   10880128
+Swap:            0          0          0
+</code></pre>
+<p>已用内存从 12145424 KB 下降到 7781960 KB，意味着我释放了 4363464 KB 的 RAM。甚至比预期的 4329040 KB 还略高一点，但是已经非常接近预估值了。而且大多数释放都来自磁盘缓存，这一点也符合我的预期，因为它用在<code>shared_buffers</code>中。</p>
+<p>一切都很好，但是可以使用这种方法来评估杀死单个后端进程后，将释放多少 RAM 吗？</p>
+<p>是的，但也不是。关闭整个 PG 意味着可以释放它正在使用的所有共享内存。在正常环境中，当您杀死一个后端进程时，最终只能释放该后端专用的内存（Pss）。但是这部分内存通常比较小。</p>
+<p>例如，在另一台具有令人印象深刻的硬件的机器上：</p>
+<pre><code>=&gt; ps uxf | grep USER.db_name | sort -nk6 | tail -n 1 | tee &gt;( cat - &gt;&amp;2) | awk '{system(&quot;cat /proc/&quot;$2&quot;/smaps&quot;)}' | grep ^Private | awk '{A+=$2} END{print A}'
+postgres  5278  8.2  0.3 107465132 1727408 ?   Ss   13:21   0:03  \_ postgres: USER db_name aa.bbb.cc.dd(eeeee) idle
+52580
+</code></pre>
+<p>如上所示，该进程具有 1.7GB 的 RSS（在<code>ps</code>输出中可以看到），但是其中只有 52MB 是专用内存（PSS），如果该进程被杀死，它将仅仅释放 52MB 的 PSS 内存，因为其他进程仍然可能在使用它所使用的那部分共享内存（RSS）。</p>
+<p>So no, you can't use the Pss for this, but you can use <code>Private_*</code> data from smaps to get the number.</p>
+<p>综上所述，PostgreSQL 使用的内存比乍看之下要少得多，并且您只需要执行一些 Shell 命令/脚本，就可以获得相当准确的内存使用量数据。</p>
+<p>现在，我准备向大家征求意见，以指出这篇文章中的所有技术错误，或者（更糟糕的是）错别字。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>肉啃肉er </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://guobo507.github.io/2020/how-much-ram-is-pg-using/>https://guobo507.github.io/2020/how-much-ram-is-pg-using/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://guobo507.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://guobo507.github.io/2020/which-tables-should-be-autovacuumed-or-autoanalyzed/" class="prev" rel="prev" title="【翻译】Which tables should be auto vacuumed or auto analyzed?"><i class="iconfont icon-left"></i>&nbsp;【翻译】Which tables should be auto vacuumed or auto analyzed?</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://guobo507.github.io/">肉啃肉er</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
